@@ -139,13 +139,35 @@ double result_q(double r, double z, vector<double> q, vector<vector<double>> gri
 }
 
 //коэффициент 
+//коэффициент 
 double sigma(int num, vector<vector<double>> grid, vector<vector<int>> num_elem)
 {
 	for (int i = 0; i < sloy.size(); i++)
 	{
-		if (grid[num_elem[num][0]][1] <= sloy[i][1] && grid[num_elem[num][2]][1] <= sloy[i][1])
-			if (grid[num_elem[num][0]][1] >= sloy[i][0] && grid[num_elem[num][2]][1] >= sloy[i][0])
-				return sloy[i][2];
+		// Получаем координаты вершин элемента
+		double z0 = grid[num_elem[num][0]][1];  // нижняя левая
+		double z1 = grid[num_elem[num][2]][1];  // верхняя левая
+		double r0 = grid[num_elem[num][0]][0];  // нижняя левая
+		double r1 = grid[num_elem[num][1]][0];  // нижняя правая
+
+		// Координаты центра элемента
+		double center_z = (z0 + z1) / 2.0;
+		double center_r = (r0 + r1) / 2.0;
+
+		// Получаем границы слоя
+		double layer_r_min = sloy[i][0];
+		double layer_r_max = sloy[i][1];
+		double layer_z_min = sloy[i][2];
+		double layer_z_max = sloy[i][3];
+		double layer_sigma = sloy[i][4];
+
+		// Проверяем, попадает ли центр элемента в слой
+		bool in_z_range = (center_z >= layer_z_min && center_z <= layer_z_max);
+		bool in_r_range = (center_r >= layer_r_min && center_r <= layer_r_max);
+
+		if (in_z_range && in_r_range) {
+			return layer_sigma;
+		}
 	}
 	return 0;
 }
@@ -154,9 +176,30 @@ double sigma_dop(int num, vector<vector<double>> grid, vector<vector<int>> num_e
 {
 	for (int i = 0; i < sloy_dop.size(); i++)
 	{
-		if (grid[num_elem[num][0]][1] <= sloy_dop[i][1] && grid[num_elem[num][2]][1] <= sloy_dop[i][1])
-			if (grid[num_elem[num][0]][1] >= sloy_dop[i][0] && grid[num_elem[num][2]][1] >= sloy_dop[i][0])
-				return sloy_dop[i][2];
+		// Получаем координаты вершин элемента
+		double z0 = grid[num_elem[num][0]][1];
+		double z1 = grid[num_elem[num][2]][1];
+		double r0 = grid[num_elem[num][0]][0];
+		double r1 = grid[num_elem[num][1]][0];
+
+		// Координаты центра элемента
+		double center_z = (z0 + z1) / 2.0;
+		double center_r = (r0 + r1) / 2.0;
+
+		// Получаем границы слоя
+		double layer_r_min = sloy_dop[i][0];
+		double layer_r_max = sloy_dop[i][1];
+		double layer_z_min = sloy_dop[i][2];
+		double layer_z_max = sloy_dop[i][3];
+		double layer_sigma = sloy_dop[i][4];
+
+		// Проверяем, попадает ли центр элемента в слой
+		bool in_z_range = (center_z >= layer_z_min && center_z <= layer_z_max);
+		bool in_r_range = (center_r >= layer_r_min && center_r <= layer_r_max);
+
+		if (in_z_range && in_r_range) {
+			return layer_sigma;
+		}
 	}
 	return 0;
 }
@@ -211,9 +254,9 @@ void SigmaGeneration()
 
 	for (int i = 0; i < n_sloy; i++)
 	{
-		sloy[i].resize(3);
-		// нижняя граница .. верхняя граница .. sigma
-		input >> sloy[i][0] >> sloy[i][1] >> sloy[i][2];
+		sloy[i].resize(5);
+		// левая и правая границы нижняя граница .. верхняя граница .. sigma
+		input >> sloy[i][0] >> sloy[i][1] >> sloy[i][2] >> sloy[i][3] >> sloy[i][4];
 	}
 #ifdef MULTISTEP
 	int n_sloy_dop; // кол-во слоев
@@ -222,9 +265,9 @@ void SigmaGeneration()
 
 	for (int i = 0; i < n_sloy_dop; i++)
 	{
-		sloy_dop[i].resize(3);
-		// нижняя граница .. верхняя граница .. sigma
-		input >> sloy_dop[i][0] >> sloy_dop[i][1] >> sloy_dop[i][2];
+		sloy_dop[i].resize(5);
+		// левая и правая границы нижняя граница .. верхняя граница .. sigma
+		input >> sloy_dop[i][0] >> sloy_dop[i][1] >> sloy_dop[i][2] >> sloy_dop[i][3] >> sloy_dop[i][4];
 	}
 #endif
 }
@@ -933,15 +976,47 @@ void field_selection()
 	ofstream output("q.txt");
 	SigmaGeneration();
 	GridGeneration();
+
+	// ДОБАВЬТЕ ОТЛАДОЧНУЮ ПЕЧАТЬ
+	cout << "sloy.size() = " << sloy.size() << endl;
+	for (int i = 0; i < sloy.size(); i++) {
+		cout << "Layer " << i << ": r_min=" << sloy[i][0]
+			<< " r_max=" << sloy[i][1]
+			<< " z_min=" << sloy[i][2]
+			<< " z_max=" << sloy[i][3]
+			<< " sigma=" << sloy[i][4] << endl;
+	}
+
+	// Проверьте несколько элементов
+	cout << "\nChecking sigma for first 5 elements:" << endl;
+	for (int i = 0; i < min(5, n); i++) {
+		double sig = sigma(i, grid, num_elem);
+		cout << "Element " << i << ": sigma = " << sig << endl;
+		if (sig == 0) {
+			// Выведите координаты элемента для отладки
+			double z0 = grid[num_elem[i][0]][1];
+			double z1 = grid[num_elem[i][2]][1];
+			double r0 = grid[num_elem[i][0]][0];
+			double r1 = grid[num_elem[i][1]][0];
+			double center_z = (z0 + z1) / 2.0;
+			double center_r = (r0 + r1) / 2.0;
+			cout << "  Coords: z=[" << z0 << "," << z1 << "] r=[" << r0 << "," << r1
+				<< "] center=(" << center_r << "," << center_z << ")" << endl;
+		}
+	}
+
 	// сохранение сетки 
 	for (int i = 0; i < grid.size(); i++) {
-
 		grid_n.push_back(grid[i]);
 	}
 	for (int i = 0; i < num_elem.size(); i++) {
-
 		num_elem_n.push_back(num_elem[i]);
 	}
+
+	// ДОБАВЬТЕ ПРОВЕРКУ РАЗМЕРОВ
+	cout << "\nnv = " << nv << ", grid_n.size() = " << grid_n.size()
+		<< ", num_elem_n.size() = " << num_elem_n.size() << endl;
+
 	MatrixPortrait(num_elem_n);
 	qn = direct_task(); // прямая задача
 
@@ -1018,7 +1093,7 @@ void inverse_problem() {
 		//tok = tmp_u;
 		//sloy_dop[1][2] = tmp_u;
 #ifdef MULTISTEP
-		sloy_dop[2][2] = tmp_u;
+		sloy_dop[0][4] = tmp_u;
 #endif
 #ifndef MULTISTEP
 		sloy[2][2] = tmp_u;
@@ -1031,7 +1106,7 @@ void inverse_problem() {
 		//tok = 1.05 * tmp_u;
 		//sloy_dop[1][2] = 1.05 * tmp_u;
 #ifdef MULTISTEP
-		sloy_dop[2][2] = 1.05 * tmp_u;
+		sloy_dop[0][4] = 1.05 * tmp_u;
 #endif // MULTISTEP
 #ifndef MULTISTEP
 		sloy[2][2] = 1.05 * tmp_u;
@@ -1065,7 +1140,7 @@ void inverse_problem() {
 			//tok = delta_u * betta + tmp_u;
 			//sloy_dop[1][2] = delta_u * betta + tmp_u;
 #ifdef MULTISTEP
-			sloy_dop[2][2] = delta_u * betta + tmp_u;
+			sloy_dop[0][4] = delta_u * betta + tmp_u;
 #endif
 #ifndef MULTISTEP
 			sloy[2][2] = delta_u * betta + tmp_u;
@@ -1090,7 +1165,7 @@ void inverse_problem() {
 		//cout << "iter = " << iter + 1 << setprecision(15) << " tok = " << tok << endl;
 		//cout << "iter = " << iter + 1 << setprecision(15) << " sigma = " << sloy_dop[1][2] << endl;
 #ifdef MULTISTEP
-		cout << "iter = " << iter + 1 << setprecision(15) << " sigma = " << sloy_dop[2][2] << endl;
+		cout << "iter = " << iter + 1 << setprecision(15) << " sigma = " << sloy_dop[0][4] << endl;
 #endif
 #ifndef MULTISTEP
 		cout << "iter = " << iter + 1 << setprecision(15) << " sigma = " << sloy[2][2] << endl;
@@ -1102,7 +1177,7 @@ void inverse_problem() {
 			//tmp_u = tok;
 			//tmp_u = sloy_dop[1][2];
 #ifdef MULTISTEP
-			tmp_u = sloy_dop[2][2];
+			tmp_u = sloy_dop[0][4];
 #endif
 #ifndef MULTISTEP
 			tmp_u = sloy[2][2];

@@ -910,7 +910,7 @@ void result_function_q(vector<double>& vec, vector<double> q, vector<vector<doub
 }
 
 double derivative(double a, double b) {
-	return (b - a) / (0.05 * tmp_u);
+	return (b - a) / (0.01 * tmp_u);
 }
 
 void clearAllVectors()
@@ -976,49 +976,16 @@ void field_selection()
 	ofstream output("q.txt");
 	SigmaGeneration();
 	GridGeneration();
-
-	// ДОБАВЬТЕ ОТЛАДОЧНУЮ ПЕЧАТЬ
-	cout << "sloy.size() = " << sloy.size() << endl;
-	for (int i = 0; i < sloy.size(); i++) {
-		cout << "Layer " << i << ": r_min=" << sloy[i][0]
-			<< " r_max=" << sloy[i][1]
-			<< " z_min=" << sloy[i][2]
-			<< " z_max=" << sloy[i][3]
-			<< " sigma=" << sloy[i][4] << endl;
-	}
-
-	// Проверьте несколько элементов
-	cout << "\nChecking sigma for first 5 elements:" << endl;
-	for (int i = 0; i < min(5, n); i++) {
-		double sig = sigma(i, grid, num_elem);
-		cout << "Element " << i << ": sigma = " << sig << endl;
-		if (sig == 0) {
-			// Выведите координаты элемента для отладки
-			double z0 = grid[num_elem[i][0]][1];
-			double z1 = grid[num_elem[i][2]][1];
-			double r0 = grid[num_elem[i][0]][0];
-			double r1 = grid[num_elem[i][1]][0];
-			double center_z = (z0 + z1) / 2.0;
-			double center_r = (r0 + r1) / 2.0;
-			cout << "  Coords: z=[" << z0 << "," << z1 << "] r=[" << r0 << "," << r1
-				<< "] center=(" << center_r << "," << center_z << ")" << endl;
-		}
-	}
-
-	// сохранение сетки 
 	for (int i = 0; i < grid.size(); i++) {
+
 		grid_n.push_back(grid[i]);
 	}
 	for (int i = 0; i < num_elem.size(); i++) {
+
 		num_elem_n.push_back(num_elem[i]);
 	}
-
-	// ДОБАВЬТЕ ПРОВЕРКУ РАЗМЕРОВ
-	cout << "\nnv = " << nv << ", grid_n.size() = " << grid_n.size()
-		<< ", num_elem_n.size() = " << num_elem_n.size() << endl;
-
 	MatrixPortrait(num_elem_n);
-	qn = direct_task(); // прямая задача
+	qn = direct_task();// прямая задача
 
 
 	// обнуление параметров

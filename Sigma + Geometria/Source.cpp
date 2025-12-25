@@ -1,4 +1,3 @@
-#define MULTISTEP
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -108,8 +107,29 @@ double yB = 100.0;
 double zB = -VEL_LEN;
 
 
+vector<double_t> initial_params = { -200.0 /*y1*/ };
+
+
+struct anomaly {
+	double x0 = 0.0;
+	double x1 = 0.0;
+	double y0 = 0.0;
+	double y1 = 0.0;
+} synthetic_anomaly, generated_anomaly;
+
+struct mesh_buffer {
+	size_t r_amount = 0; vector<double> r{};
+	vector<size_t> nr{}; vector<double> kr{};
+	vector<int8_t> r_direction{};
+
+	size_t z_amount = 0; vector<double> z{};
+	vector<size_t> nz{}; vector<double> kz{};
+	vector<int8_t> z_direction{};
+} main_mesh, dop_mesh;
+
 // подсчет в заданной точке
-double result_q(double r, double z, vector<double> q, vector<vector<double>> grid, vector<vector<int>> num_elem)
+double 
+result_q(double r, double z, vector<double> q, vector<vector<double>> grid, vector<vector<int>> num_elem)
 {
 	double res = 0;
 	// определить, какому элементу принадлежит
@@ -203,6 +223,9 @@ double sigma_dop(int num, vector<vector<double>> grid, vector<vector<int>> num_e
 	}
 	return 0;
 }
+
+
+
 // подсчет матрицы жесткости
 void GetLocalG(double rp, double zs, double hr, double hz)
 {
@@ -242,6 +265,28 @@ double step(double min, double max, int n, double k)
 		return (max - min) / n;
 }
 
+static void
+sigma_read() {
+	ifstream fin("sigma.txt");
+	size_t n_sloy; // кол-во слоев
+	fin >> n_sloy; sloy.resize(n_sloy);
+	for (int i = 0; i < n_sloy; i++) {
+		sloy[i].resize(5);
+		fin >> sloy[i][0] >> sloy[i][1] >> sloy[i][2] >> sloy[i][3] >> sloy[i][4];
+	}
+	size_t n_sloy_dop; fin >> n_sloy_dop;
+	sloy_dop.resize(n_sloy_dop);
+	for (int i = 0; i < n_sloy_dop; i++) {
+		sloy_dop[i].resize(5);
+		fin >> sloy_dop[i][0] >> sloy_dop[i][1] >> sloy_dop[i][2] >> sloy_dop[i][3] >> sloy_dop[i][4];
+	}
+	synthetic_anomaly.x0 = sloy_dop[0][0];
+	synthetic_anomaly.x1 = sloy_dop[0][1];
+	synthetic_anomaly.y0 = sloy_dop[0][2];
+	synthetic_anomaly.y1 = sloy_dop[0][3];
+}
+
+[[deprecated]]
 void SigmaGeneration()
 {
 	ifstream input("sigma.txt");
@@ -258,7 +303,6 @@ void SigmaGeneration()
 		// лева€ и права€ границы нижн€€ граница .. верхн€€ граница .. sigma
 		input >> sloy[i][0] >> sloy[i][1] >> sloy[i][2] >> sloy[i][3] >> sloy[i][4];
 	}
-#ifdef MULTISTEP
 	int n_sloy_dop; // кол-во слоев
 	input >> n_sloy_dop;
 	sloy_dop.resize(n_sloy_dop);
@@ -269,62 +313,278 @@ void SigmaGeneration()
 		// лева€ и права€ границы нижн€€ граница .. верхн€€ граница .. sigma
 		input >> sloy_dop[i][0] >> sloy_dop[i][1] >> sloy_dop[i][2] >> sloy_dop[i][3] >> sloy_dop[i][4];
 	}
-#endif
 }
+
+// Use it once !!! No need to read mesh iteratively.
+static void 
+read_mesh() {
+	ifstream fin("input.txt");
+
+	fin >> main_mesh.r_amount; main_mesh.r.resize(main_mesh.r_amount + 1);
+	for (auto& ri : main_mesh.r) fin >> ri;
+	main_mesh.nr.resize(main_mesh.r_amount); for (auto& n_i : main_mesh.nr) fin >> n_i;
+	main_mesh.kr.resize(main_mesh.r_amount); for (auto& k_i : main_mesh.kr) fin >> k_i;
+	main_mesh.r_direction.resize(main_mesh.r_amount); for (auto& d_i : main_mesh.r_direction) fin >> d_i;
+	
+	fin >> main_mesh.z_amount; main_mesh.z.resize(main_mesh.z_amount + 1);
+	for (auto& ri : main_mesh.z) fin >> ri;
+	main_mesh.nz.resize(main_mesh.z_amount); for (auto& n_i : main_mesh.nz) fin >> n_i;
+	main_mesh.kz.resize(main_mesh.z_amount); for (auto& k_i : main_mesh.kz) fin >> k_i;
+	main_mesh.z_direction.resize(main_mesh.z_amount); for (auto& d_i : main_mesh.z_direction) fin >> d_i;
+}
+
+static void 
+read_dop_mesh() {
+	ifstream fin("input_dop.txt");
+	fin >> dop_mesh.r_amount; dop_mesh.r.resize(dop_mesh.r_amount + 1);
+	for (auto& ri : dop_mesh.r) fin >> ri;
+	dop_mesh.nr.resize(dop_mesh.r_amount); for (auto& n_i : dop_mesh.nr) fin >> n_i;
+	dop_mesh.kr.resize(dop_mesh.r_amount); for (auto& k_i : dop_mesh.kr) fin >> k_i;
+	dop_mesh.r_direction.resize(dop_mesh.r_amount); for (auto& d_i : dop_mesh.r_direction) fin >> d_i;
+
+	fin >> dop_mesh.z_amount; dop_mesh.z.resize(dop_mesh.z_amount + 1);
+	for (auto& ri : dop_mesh.z) fin >> ri;
+	dop_mesh.nz.resize(dop_mesh.z_amount); for (auto& n_i : dop_mesh.nz) fin >> n_i;
+	dop_mesh.kz.resize(dop_mesh.z_amount); for (auto& k_i : dop_mesh.kz) fin >> k_i;
+	dop_mesh.z_direction.resize(dop_mesh.z_amount); for (auto& d_i : dop_mesh.z_direction) fin >> d_i;
+
+	synthetic_anomaly.x0 = dop_mesh.r[1];
+	synthetic_anomaly.x1 = dop_mesh.r[2];
+	synthetic_anomaly.y0 = dop_mesh.z[1];
+	synthetic_anomaly.y1 = dop_mesh.z[2];
+}
+
+static void 
+main_grid_generation() {
+	ofstream node("node.txt");
+	ofstream elem("elem.txt");
+
+	// построение r
+	pointr = {}; pointr.resize(main_mesh.r.size()); copy(main_mesh.r.begin(), main_mesh.r.end(), pointr.begin());
+	for (int i = 0; i < pointr.size() - 1; i++)
+	{
+		// начальный шаг
+		double hr0 = step(pointr[i], pointr[i + 1], main_mesh.nr[i], main_mesh.kr[i]);
+
+		if (main_mesh.r_direction[i] == 1) // возрастает шаг
+		{
+			double r = pointr[i];
+			while (pointr[i + 1] - r > 1e-6)
+			{
+				gridr.push_back(r);
+				r += hr0;
+				hr0 *= main_mesh.kr[i];
+			}
+		}
+		else // убывает
+		{
+			double r = pointr[i + 1] - hr0;
+			while (r - pointr[i] > 1e-6)
+			{
+				gridr.push_back(r);
+				hr0 *= main_mesh.kr[i];
+				r -= hr0;
+			}
+			gridr.push_back(pointr[i]);
+		}
+	}
+	//gridr.push_back(pointr[pointr.size() - 1]); // последнюю точку отдельно 
+	gridr.push_back(pointr.back()); // последнюю точку отдельно 
+
+	// построение z
+	pointz = {}; pointz.resize(main_mesh.z.size()); copy(main_mesh.z.begin(), main_mesh.z.end(), pointz.begin());
+	for (int i = 0; i < pointz.size() - 1; i++)
+	{
+		// начальный шаг
+		double hz0 = step(pointz[i], pointz[i + 1], main_mesh.nz[i], main_mesh.kz[i]);
+
+		if (main_mesh.z_direction[i] == 1) // возрастает шаг
+		{
+			double z = pointz[i];
+			while (pointz[i + 1] - z > 1e-6)
+			{
+				gridz.push_back(z);
+				z += hz0;
+				hz0 *= main_mesh.kz[i];
+			}
+		}
+		else // убывает
+		{
+			double z = pointz[i + 1] - hz0;
+			while (z - pointz[i] > 1e-6)
+			{
+				gridz.push_back(z);
+				hz0 *= main_mesh.kz[i];
+				z -= hz0;
+			}
+			gridz.push_back(pointz[i]);
+		}
+	}
+	//gridz.push_back(pointz[pointz.size() - 1]); // последнюю точку отдельно 
+	gridz.push_back(pointz.back()); // последнюю точку отдельно 
+
+	sort(gridz.begin(), gridz.end());
+	sort(gridr.begin(), gridr.end());
+	nv = gridr.size() * gridz.size();
+	grid.resize(nv);
+
+	z_min = gridz[0];
+	r_max = gridr[gridz.size() - 1];
+
+	node << nv << endl;
+	int i = 0;
+
+	for (int iy = 0; iy < gridz.size(); iy++)
+		for (int ix = 0; ix < gridr.size(); ix++)
+		{
+			grid[i].resize(2);
+			grid[i][0] = gridr[ix];
+			grid[i][1] = gridz[iy];
+			node << i << " " << grid[i][0] << " " << grid[i][1] << endl;
+			i++;
+		}
+
+	nr_full = gridr.size() - 1;
+	nz_full = gridz.size() - 1;
+	n = nr_full * nz_full; // количество конечных элементов
+	num_elem.resize(n);
+	int tmp_num = 0;
+	for (int j = 0; j < nz_full; j++)
+		for (int i = 0; i < nr_full; i++)
+		{
+			num_elem[tmp_num].resize(4);
+			num_elem[tmp_num][0] = i + j * (nr_full + 1); // 1 вершина
+			num_elem[tmp_num][1] = i + j * (nr_full + 1) + 1; // 2 вершина
+			num_elem[tmp_num][2] = i + (j + 1) * (nr_full + 1); // 3 вершина
+			num_elem[tmp_num][3] = i + (j + 1) * (nr_full + 1) + 1; // 4 вершина
+			// вывод в файл
+			elem << tmp_num << " " << num_elem[tmp_num][0] << " " << num_elem[tmp_num][1] << " " << num_elem[tmp_num][2] << " " <<
+				num_elem[tmp_num][3] << ' ' << sigma(tmp_num, grid, num_elem) << endl;
+			tmp_num++;
+		}
+	node.close();
+	elem.close();
+}
+
+static void 
+dop_grid_generation() {
+	ofstream fout_node_dop("node_dop.txt");
+	ofstream fout_elem_dop("elem_dop.txt");
+
+	// построение r
+	pointr = {}; pointr.resize(dop_mesh.r.size()); copy(dop_mesh.r.begin(), dop_mesh.r.end(), pointr.begin());
+	for (int i = 0; i < pointr.size() - 1; i++)
+	{
+		// начальный шаг
+		double hr0 = step(pointr[i], pointr[i + 1], dop_mesh.nr[i], dop_mesh.kr[i]);
+
+		if (dop_mesh.r_direction[i] == 1) // возрастает шаг
+		{
+			double r = pointr[i];
+			while (pointr[i + 1] - r > 1e-6)
+			{
+				gridr.push_back(r);
+				r += hr0;
+				hr0 *= dop_mesh.kr[i];
+			}
+		}
+		else // убывает
+		{
+			double r = pointr[i + 1] - hr0;
+			while (r - pointr[i] > 1e-6)
+			{
+				gridr.push_back(r);
+				hr0 *= dop_mesh.kr[i];
+				r -= hr0;
+			}
+			gridr.push_back(pointr[i]);
+		}
+	}
+	//gridr.push_back(pointr[pointr.size() - 1]); // последнюю точку отдельно 
+	gridr.push_back(pointr.back()); // последнюю точку отдельно 
+
+	// построение z
+	pointz = {}; pointz.resize(dop_mesh.z.size()); copy(dop_mesh.z.begin(), dop_mesh.z.end(), pointz.begin());
+	for (int i = 0; i < pointz.size() - 1; i++)
+	{
+		// начальный шаг
+		double hz0 = step(pointz[i], pointz[i + 1], dop_mesh.nz[i], dop_mesh.kz[i]);
+
+		if (dop_mesh.z_direction[i] == 1) // возрастает шаг
+		{
+			double z = pointz[i];
+			while (pointz[i + 1] - z > 1e-6)
+			{
+				gridz.push_back(z);
+				z += hz0;
+				hz0 *= dop_mesh.kz[i];
+			}
+		}
+		else // убывает
+		{
+			double z = pointz[i + 1] - hz0;
+			while (z - pointz[i] > 1e-6)
+			{
+				gridz.push_back(z);
+				hz0 *= dop_mesh.kz[i];
+				z -= hz0;
+			}
+			gridz.push_back(pointz[i]);
+		}
+	}
+	//gridz.push_back(pointz[pointz.size() - 1]); // последнюю точку отдельно 
+	gridz.push_back(pointz.back()); // последнюю точку отдельно 
+
+	sort(gridz.begin(), gridz.end());
+	sort(gridr.begin(), gridr.end());
+	nv = gridr.size() * gridz.size();
+	grid.resize(nv);
+
+	z_min = gridz[0];
+	r_max = gridr[gridz.size() - 1];
+
+	fout_node_dop << nv << endl;
+	int i = 0;
+
+	for (int iy = 0; iy < gridz.size(); iy++)
+		for (int ix = 0; ix < gridr.size(); ix++)
+		{
+			grid[i].resize(2);
+			grid[i][0] = gridr[ix];
+			grid[i][1] = gridz[iy];
+			fout_node_dop << i << " " << grid[i][0] << " " << grid[i][1] << endl;
+			i++;
+		}
+
+	nr_full = gridr.size() - 1;
+	nz_full = gridz.size() - 1;
+	n = nr_full * nz_full; // количество конечных элементов
+	num_elem.resize(n);
+	int tmp_num = 0;
+	for (int j = 0; j < nz_full; j++)
+		for (int i = 0; i < nr_full; i++)
+		{
+			num_elem[tmp_num].resize(4);
+			num_elem[tmp_num][0] = i + j * (nr_full + 1); // 1 вершина
+			num_elem[tmp_num][1] = i + j * (nr_full + 1) + 1; // 2 вершина
+			num_elem[tmp_num][2] = i + (j + 1) * (nr_full + 1); // 3 вершина
+			num_elem[tmp_num][3] = i + (j + 1) * (nr_full + 1) + 1; // 4 вершина
+			// вывод в файл
+			fout_elem_dop << tmp_num << " " << num_elem[tmp_num][0] << " " << num_elem[tmp_num][1] << " " << num_elem[tmp_num][2] << " " <<
+				num_elem[tmp_num][3] << ' ' << sigma(tmp_num, grid, num_elem) << endl;
+			tmp_num++;
+		}
+
+	fout_node_dop.close();
+	fout_elem_dop.close();
+}
+
 // cетка
+[[deprecated]]
 void GridGeneration()
 {
 	ofstream node("node.txt");
 	ofstream elem("elem.txt");
-
-	int pointz_size = 0;
-	int pointr_size = 0;
-
-	// чтение r
-	input >> pointr_size;
-	pointr.resize(pointr_size + 1);
-	for (int i = 0; i < pointr.size(); i++)
-	{
-		input >> pointr[i];
-	}
-	nr.resize(pointr_size);
-	for (int i = 0; i < pointr_size; i++)
-	{
-		input >> nr[i];
-	}
-	kr.resize(pointr_size);
-	for (int i = 0; i < pointr_size; i++)
-	{
-		input >> kr[i];
-	}
-	kr_route.resize(pointr_size);
-	for (int i = 0; i < pointr_size; i++)
-	{
-		input >> kr_route[i];
-	}
-
-	// чтение z
-	input >> pointz_size;
-	pointz.resize(pointz_size + 1);
-	for (int i = 0; i < pointz.size(); i++)
-	{
-		input >> pointz[i];
-	}
-	nz.resize(pointz_size);
-	for (int i = 0; i < pointz_size; i++)
-	{
-		input >> nz[i];
-	}
-	kz.resize(pointz_size);
-	for (int i = 0; i < pointz_size; i++)
-	{
-		input >> kz[i];
-	}
-	kz_route.resize(pointz_size);
-	for (int i = 0; i < pointz_size; i++)
-	{
-		input >> kz_route[i];
-	}
 
 	// построение r
 	for (int i = 0; i < pointr.size() - 1; i++)
@@ -634,6 +894,7 @@ void First(vector<vector<double>> grid)
 	}
 }
 
+#pragma region IMMUTABLE 
 void LU()
 {
 	for (int i = 0; i < ig[nv]; i++)
@@ -778,6 +1039,7 @@ void LOS()
 		}
 	}
 }
+#pragma endregion IMMUTABLE
 
 // пр€ма€ задача
 vector<double> direct_task()
@@ -810,7 +1072,6 @@ vector<double> direct_task()
 		}
 	}
 	else {
-		//#ifdef MULTISTEP
 		for (int i(0); i < num_elem_n.size(); ++i) {
 			if (grid_n[num_elem_n[i][0]][0] == 0.0 && (grid_n[num_elem_n[i][0]][1] <= zB && zB <= grid_n[num_elem_n[i][2]][1])) {
 				b[num_elem_n[i][0]] = -tok * (grid_n[num_elem_n[i][2]][1] - zB) / (grid_n[num_elem_n[i][2]][1] - grid_n[num_elem_n[i][0]][1]);
@@ -821,7 +1082,6 @@ vector<double> direct_task()
 				b[num_elem_n[i][2]] = tok * (zA - grid_n[num_elem_n[i][0]][1]) / (grid_n[num_elem_n[i][2]][1] - grid_n[num_elem_n[i][0]][1]);
 			}
 		}
-		//#endif
 	}
 
 	First(grid_n);
@@ -846,6 +1106,7 @@ vector<double> direct_task()
 		q << scientific << setprecision(15) << x0[i] << endl;
 	return x0;
 }
+
 // пр€ма€ задача
 vector<double> direct_task_dop()
 {
@@ -971,39 +1232,13 @@ void clearAllVectors()
 	kr_route.clear();
 }
 
-void field_selection()
-{
-	ofstream output("q.txt");
-	SigmaGeneration();
-	GridGeneration();
+static void 
+field_selection() {
+	//SigmaGeneration();
 
-	// ƒќЅј¬№“≈ ќ“Ћјƒќ„Ќ”ё ѕ≈„ј“№
-	cout << "sloy.size() = " << sloy.size() << endl;
-	for (int i = 0; i < sloy.size(); i++) {
-		cout << "Layer " << i << ": r_min=" << sloy[i][0]
-			<< " r_max=" << sloy[i][1]
-			<< " z_min=" << sloy[i][2]
-			<< " z_max=" << sloy[i][3]
-			<< " sigma=" << sloy[i][4] << endl;
-	}
-
-	// ѕроверьте несколько элементов
-	cout << "\nChecking sigma for first 5 elements:" << endl;
-	for (int i = 0; i < min(5, n); i++) {
-		double sig = sigma(i, grid, num_elem);
-		cout << "Element " << i << ": sigma = " << sig << endl;
-		if (sig == 0) {
-			// ¬ыведите координаты элемента дл€ отладки
-			double z0 = grid[num_elem[i][0]][1];
-			double z1 = grid[num_elem[i][2]][1];
-			double r0 = grid[num_elem[i][0]][0];
-			double r1 = grid[num_elem[i][1]][0];
-			double center_z = (z0 + z1) / 2.0;
-			double center_r = (r0 + r1) / 2.0;
-			cout << "  Coords: z=[" << z0 << "," << z1 << "] r=[" << r0 << "," << r1
-				<< "] center=(" << center_r << "," << center_z << ")" << endl;
-		}
-	}
+	cout << "Synthetic data generation started" << endl;
+	main_grid_generation();
+	//GridGeneration();
 
 	// сохранение сетки 
 	for (int i = 0; i < grid.size(); i++) {
@@ -1013,19 +1248,14 @@ void field_selection()
 		num_elem_n.push_back(num_elem[i]);
 	}
 
-	// ƒќЅј¬№“≈ ѕ–ќ¬≈– ” –ј«ћ≈–ќ¬
-	cout << "\nnv = " << nv << ", grid_n.size() = " << grid_n.size()
-		<< ", num_elem_n.size() = " << num_elem_n.size() << endl;
-
 	MatrixPortrait(num_elem_n);
 	qn = direct_task(); // пр€ма€ задача
-
 
 	// обнуление параметров
 	clearAllVectors();
 
-#ifdef MULTISTEP
-	GridGeneration();
+	dop_grid_generation();
+	//GridGeneration();
 	// сохранение сетки 
 	for (int i = 0; i < grid.size(); i++) {
 
@@ -1037,67 +1267,89 @@ void field_selection()
 	}
 	MatrixPortrait(num_elem_dop);
 	q_dop = direct_task_dop(); // пр€ма€ задача дополнительна€
-#endif // MULTISTEP
 	qv.resize(qn.size());
 
 	// итоговый результат 
-#ifdef MULTISTEP
 	for (int i = 0; i < grid_n.size(); i++)
 	{
 		qv[i] = result_q(grid_n[i][0], grid_n[i][1], qn, grid_n, num_elem_n) +
 			result_q(grid_n[i][0], grid_n[i][1], q_dop, grid_dop, num_elem_dop);
-		//qv[i] = result_q(grid_n[i][0], grid_n[i][1], qn, grid_n, num_elem_n);
-		//cout << qv[i] << endl; 
 	}
-#endif
-
-#ifndef MULTISTEP
-	qv = qn;
-#endif
+	cout << "Synthetic data generated" << endl;
 }
+
+
+
 void field_selection_direct_task()
 {
 	clearAllVectors();
 	nv = grid_n.size();
+
+	grid_n = {}; num_elem_n = {};
+	main_grid_generation();
+	//GridGeneration();
+
+	// сохранение сетки 
+	for (int i = 0; i < grid.size(); i++) {
+		grid_n.push_back(grid[i]);
+	}
+	for (int i = 0; i < num_elem.size(); i++) {
+		num_elem_n.push_back(num_elem[i]);
+	}
+
+
+
 	MatrixPortrait(num_elem_n);
 	qn = direct_task(); // пр€ма€ задача
 	// обнуление параметров
 	clearAllVectors();
-#ifdef MULTISTEP
 	nv = grid_dop.size();
+
+	dop_grid_generation();
+	//GridGeneration();
+	// сохранение сетки
+	grid_dop = {}; num_elem_dop = {};
+	for (int i = 0; i < grid.size(); i++) {
+
+		grid_dop.push_back(grid[i]);
+	}
+	for (int i = 0; i < num_elem.size(); i++) {
+
+		num_elem_dop.push_back(num_elem[i]);
+	}
+
+
 	MatrixPortrait(num_elem_dop);
 	q_dop = direct_task_dop(); // пр€ма€ задача дополнительна€
-#endif
 	// итоговый результат 
-#ifdef MULTISTEP
 	for (int i = 0; i < grid_n.size(); i++)
 	{
 		qv[i] = result_q(grid_n[i][0], grid_n[i][1], qn, grid_n, num_elem_n) +
 			result_q(grid_n[i][0], grid_n[i][1], q_dop, grid_dop, num_elem_dop);
 		//qv[i] = result_q(grid_n[i][0], grid_n[i][1], qn, grid_n, num_elem_n);
 	}
-#endif
-#ifndef MULTISTEP
-	qv = qn;
-#endif
 }
 
 void inverse_problem() {
+	cout << "\tGenerated synthetic data on receivers:" << endl;
 	result_function_q(true_eps, qv, grid_n, num_elem_n);
 	result_function_q(qv, grid_n, num_elem_n);
 	//true_eps[0] *= 1.05; // зашумление
-	tmp_u = start_u;
+	decltype(initial_params) template_params(initial_params.begin(), initial_params.end());
+	//tmp_u = start_u;
+	tmp_u = initial_params[0];
 	for (int iter = 0; iter < max_iter; iter++) {
 		double sum = 0; // лева€ часть уравнени€
 		double f = 0; // права€ часть уравнени€
 		//tok = tmp_u;
 		//sloy_dop[1][2] = tmp_u;
-#ifdef MULTISTEP
-		sloy_dop[0][4] = tmp_u;
-#endif
-#ifndef MULTISTEP
-		sloy[2][2] = tmp_u;
-#endif
+
+
+		// ACHTUNG !!!
+		sloy_dop[0][3] = tmp_u;
+		dop_mesh.z[2] = sloy_dop[0][3];
+
+
 		// приращение
 		field_selection_direct_task();
 		result_function_q(tmp_eps, qv, grid_n, num_elem_n);
@@ -1105,12 +1357,9 @@ void inverse_problem() {
 
 		//tok = 1.05 * tmp_u;
 		//sloy_dop[1][2] = 1.05 * tmp_u;
-#ifdef MULTISTEP
-		sloy_dop[0][4] = 1.05 * tmp_u;
-#endif // MULTISTEP
-#ifndef MULTISTEP
-		sloy[2][2] = 1.05 * tmp_u;
-#endif // MULTISTEP
+		sloy_dop[0][3] = 1.05 * tmp_u;
+		dop_mesh.z[2] = sloy_dop[0][3];
+
 
 		field_selection_direct_task();
 		result_function_q(delta_tmp_eps, qv, grid_n, num_elem_n);
@@ -1124,7 +1373,7 @@ void inverse_problem() {
 		for (int i = 0; i < 5; i++) {
 			f -= w * w * derivative(delta_tmp_eps[i], tmp_eps[i]) * (true_eps[i] - tmp_eps[i]);
 		}
-		f -= alpha * (tmp_u - start_u);
+		f -= alpha * (tmp_u - initial_params[0]);
 
 		delta_u = f / sum;
 		// итераци€
@@ -1139,12 +1388,9 @@ void inverse_problem() {
 			J_next = 0;
 			//tok = delta_u * betta + tmp_u;
 			//sloy_dop[1][2] = delta_u * betta + tmp_u;
-#ifdef MULTISTEP
-			sloy_dop[0][4] = delta_u * betta + tmp_u;
-#endif
-#ifndef MULTISTEP
-			sloy[2][2] = delta_u * betta + tmp_u;
-#endif
+			sloy_dop[0][3] = delta_u * betta + tmp_u;
+			dop_mesh.z[2] = sloy_dop[0][3];
+
 
 			field_selection_direct_task();
 			result_function_q(next_eps, qv, grid_n, num_elem_n);
@@ -1164,24 +1410,26 @@ void inverse_problem() {
 		betta = 1;
 		//cout << "iter = " << iter + 1 << setprecision(15) << " tok = " << tok << endl;
 		//cout << "iter = " << iter + 1 << setprecision(15) << " sigma = " << sloy_dop[1][2] << endl;
-#ifdef MULTISTEP
-		cout << "iter = " << iter + 1 << setprecision(15) << " sigma = " << sloy_dop[0][4] << endl;
-#endif
-#ifndef MULTISTEP
-		cout << "iter = " << iter + 1 << setprecision(15) << " sigma = " << sloy[2][2] << endl;
-#endif
+		cout << "iter = " << iter + 1 << " x0 = " << sloy_dop[0][0] << endl;
+		cout << "iter = " << iter + 1 << " x1 = " << sloy_dop[0][1] << endl;
+		cout << "iter = " << iter + 1 << " y0 = " << sloy_dop[0][2] << endl;
+		cout << "iter = " << iter + 1 << " y1 = " << sloy_dop[0][3] << endl;
+		cout << delta_u << endl;
+
+		dop_mesh.r[1] = sloy_dop[0][0];
+		dop_mesh.r[2] = sloy_dop[0][1];
+		dop_mesh.z[1] = sloy_dop[0][2];
+		dop_mesh.z[2] = sloy_dop[0][3];
+
+
 		if (abs(J_prev - J_next) < eps) {
 			break;
 		}
 		else {
 			//tmp_u = tok;
 			//tmp_u = sloy_dop[1][2];
-#ifdef MULTISTEP
-			tmp_u = sloy_dop[0][4];
-#endif
-#ifndef MULTISTEP
-			tmp_u = sloy[2][2];
-#endif
+			tmp_u = sloy_dop[0][3];
+
 
 		}
 	}
@@ -1190,6 +1438,17 @@ void inverse_problem() {
 int main()
 {
 	ofstream output("q.txt");
+	// step 1. read data
+	cout << "Reading data" << endl;
+	read_mesh();
+	read_dop_mesh();
+	sigma_read();
+	
+	// step 2. generate synthetic
+	cout << "Generate synthetic" << endl;
 	field_selection();
+
+	// step 3. solving inverse task.
+	cout << "Solving inverse task" << endl;
 	inverse_problem();
 }

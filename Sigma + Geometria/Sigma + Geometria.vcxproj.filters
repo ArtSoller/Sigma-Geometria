@@ -41,5 +41,8 @@
     <Text Include="sigma.txt">
       <Filter>Файлы ресурсов</Filter>
     </Text>
+    <Text Include="input_dop.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
   </ItemGroup>
 </Project>

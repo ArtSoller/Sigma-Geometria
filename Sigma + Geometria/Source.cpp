@@ -1,9 +1,7 @@
-#include <iostream>
+п»ї#include <iostream>
 #include <vector>
 #include <fstream>
 #include <array>
-
-using namespace std;
 
 #include <time.h>
 #include <omp.h>
@@ -16,33 +14,35 @@ using namespace std;
 
 using namespace std;
 
-int maxiter = 100; // максимальное количество итераций прямая задача
-int max_iter = 100; // максимальное количество итераций обратная задача
-double eps = 1e-15; // величина требуемой относительной невзяки
-int n = 0; // количество конечных элементов
-int nv = 0; // количество узлов в сетке
-int ne = 0; // количество краевых условий
-int nn = 0; // количество главных условий
-double r_min = 0; // наименьшая координата по r
-double r_max = 0; // наибольшая координата по r
-double z_min = 0; // наименьшая координата по z
-double z_max = 0; // наибольшая координата по z
-int nr_full = 0; // количество точек по r
-int nz_full = 0; // количество точек по z
-int n1 = 0; // количество 1 краевых
-int n2 = 0; // количество 2 краевых
+using matrix = vector<vector<double>>;
+
+int maxiter = 100; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+int max_iter = 100; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+double eps = 1e-15; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+int n = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+int nv = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ
+int ne = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+int nn = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+double r_min = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ r
+double r_max = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ r
+double z_min = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ z
+double z_max = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ z
+int nr_full = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ r
+int nz_full = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ z
+int n1 = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+int n2 = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 2 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 const double VEL_LEN = 100.0;
 
-vector<vector<double>> G(4); // матрица жесткости
-vector<vector<double>> M(4); // матрица массы
-vector<vector<double>> localA(4); // локальная матрица
-vector<double> localb(4); // локальный вектор
-vector<vector<double>> grid; // матрица координат узлов
-vector<vector<int>> num_elem; // матрица глобальных номеров узлов
-vector<vector<int>> edge1; // 1 краевые условия (узел1, узел2, формула)
-vector<vector<int>> edge2; // 2 краевые условия (узел1, узел2, формула)
-vector<double> localb2(2); // для учета 2 и 3 краевых
-vector<vector<double>> locala2(2); // для учета 3 краевых
+vector<vector<double>> G(4); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+vector<vector<double>> M(4); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+vector<vector<double>> localA(4); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+vector<double> localb(4); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+vector<vector<double>> grid; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+vector<vector<int>> num_elem; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+vector<vector<int>> edge1; // 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ1, пїЅпїЅпїЅпїЅ2, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+vector<vector<int>> edge2; // 2 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ1, пїЅпїЅпїЅпїЅ2, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+vector<double> localb2(2); // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 2 пїЅ 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+vector<vector<double>> locala2(2); // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 vector<double> gridr;
 vector<double> gridz;
@@ -50,45 +50,45 @@ vector<vector<double>> sloy;
 vector<vector<double>> sloy_dop;
 
 
-vector<int> ig; // строки
-vector<int> jg; // столбцы
-vector<double> al; // нижний треугольник 
-vector<double> au; // верхний треугольник
-vector<double> di; // диагональ
-vector<double> b; // вектор правой части
-// для ЛОС
-vector<double> L; // нижний треугольник 
-vector<double> U; // верхний треугольник
-vector<double> D; // диагональ
+vector<int> ig; // пїЅпїЅпїЅпїЅпїЅпїЅ
+vector<int> jg; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+vector<double> al; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+vector<double> au; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+vector<double> di; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+vector<double> b; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+// пїЅпїЅпїЅ пїЅпїЅпїЅ
+vector<double> L; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+vector<double> U; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+vector<double> D; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 vector<double> x0;
 vector<double> z;
 vector<double> r;
 vector<double> y;
 vector<double> p;
 vector<double> t;
-// обратная задача
-vector<double> true_eps(5); // истинное решение
-vector<double> tmp_eps(5); // решение на текущей итерации прямой задачи
-vector<double> next_eps(5); // решение на следующей итерации прямой задачи
-vector<double> delta_tmp_eps(5); // решение на текущей итерации прямой задачи с прираще-нием
-double start_u = 1e-6; // начальное приближение (u0)
-double tmp_u; // решение на текущей итерации обратной задачи
-double delta_u; // приращение на текущей итерации
-double w = 1; // веса
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+vector<double> true_eps(10); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+vector<double> tmp_eps(10); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+vector<double> next_eps(10); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+vector<double> delta_tmp_eps(10); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅ
+double start_u = 1e-6; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (u0)
+//double tmp_u; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+//double delta_u; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+double w = 1; // пїЅпїЅпїЅпїЅ
 double alpha = 0;
 double betta = 1;
 double gamma = 1e-4;
-double tok = 1; // ток
+double tok = 1; // пїЅпїЅпїЅ
 
-vector<double> pointz; // контрольные точки по z
-vector<double> nz; // количество интервалов по z
-vector<double> kz; // коэффициент разрядки по z
-vector<int> kz_route; // направление разрядки
+vector<double> pointz; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ z
+vector<double> nz; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ z
+vector<double> kz; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ z
+vector<int> kz_route; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
-vector<double> pointr; // контрольные точки по r
-vector<double> nr; // количество интервалов по r
-vector<double> kr; // коэффициент разрядки по r
-vector<int> kr_route; // направление разрядки
+vector<double> pointr; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ r
+vector<double> nr; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ r
+vector<double> kr; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ r
+vector<int> kr_route; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 ifstream input("input.txt");
 vector<double> qn;
@@ -107,7 +107,8 @@ double yB = 100.0;
 double zB = -VEL_LEN;
 
 
-vector<double_t> initial_params = { -200.0 /*y1*/ };
+vector<double_t> initial_params = { 150 /*y0*/,
+									 2250 /*y1*/ };
 
 
 struct anomaly {
@@ -127,12 +128,12 @@ struct mesh_buffer {
 	vector<int8_t> z_direction{};
 } main_mesh, dop_mesh;
 
-// подсчет в заданной точке
-double 
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+double
 result_q(double r, double z, vector<double> q, vector<vector<double>> grid, vector<vector<int>> num_elem)
 {
 	double res = 0;
-	// определить, какому элементу принадлежит
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	for (int i = 0; i < num_elem.size(); i++)
 	{
 		double r0 = grid[num_elem[i][0]][0];
@@ -143,7 +144,7 @@ result_q(double r, double z, vector<double> q, vector<vector<double>> grid, vect
 		double hz = z1 - z0;
 
 		if (r >= r0 && r <= r1 && z >= z0 && z <= z1)
-		{// вычисление соответствующих базисных функций
+		{// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 			vector<double> psi(4);
 			psi[0] = (r1 - r) / hr * (z1 - z) / hz;
@@ -151,37 +152,37 @@ result_q(double r, double z, vector<double> q, vector<vector<double>> grid, vect
 			psi[2] = (r1 - r) / hr * (z - z0) / hz;
 			psi[3] = (r - r0) / hr * (z - z0) / hz;
 
-			res = psi[0] * q[num_elem[i][0]] + psi[1] * q[num_elem[i][1]] + psi[2] * q[num_elem[i][2]] + psi[3] * q[num_elem[i][3]]; // значение V
+			res = psi[0] * q[num_elem[i][0]] + psi[1] * q[num_elem[i][1]] + psi[2] * q[num_elem[i][2]] + psi[3] * q[num_elem[i][3]]; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ V
 			return res;
 		}
 	}
 	return res;
 }
 
-//коэффициент 
-//коэффициент 
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 double sigma(int num, vector<vector<double>> grid, vector<vector<int>> num_elem)
 {
 	for (int i = 0; i < sloy.size(); i++)
 	{
-		// Получаем координаты вершин элемента
-		double z0 = grid[num_elem[num][0]][1];  // нижняя левая
-		double z1 = grid[num_elem[num][2]][1];  // верхняя левая
-		double r0 = grid[num_elem[num][0]][0];  // нижняя левая
-		double r1 = grid[num_elem[num][1]][0];  // нижняя правая
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+		double z0 = grid[num_elem[num][0]][1];  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+		double z1 = grid[num_elem[num][2]][1];  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+		double r0 = grid[num_elem[num][0]][0];  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+		double r1 = grid[num_elem[num][1]][0];  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
-		// Координаты центра элемента
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		double center_z = (z0 + z1) / 2.0;
 		double center_r = (r0 + r1) / 2.0;
 
-		// Получаем границы слоя
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 		double layer_r_min = sloy[i][0];
 		double layer_r_max = sloy[i][1];
 		double layer_z_min = sloy[i][2];
 		double layer_z_max = sloy[i][3];
 		double layer_sigma = sloy[i][4];
 
-		// Проверяем, попадает ли центр элемента в слой
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
 		bool in_z_range = (center_z >= layer_z_min && center_z <= layer_z_max);
 		bool in_r_range = (center_r >= layer_r_min && center_r <= layer_r_max);
 
@@ -196,24 +197,24 @@ double sigma_dop(int num, vector<vector<double>> grid, vector<vector<int>> num_e
 {
 	for (int i = 0; i < sloy_dop.size(); i++)
 	{
-		// Получаем координаты вершин элемента
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		double z0 = grid[num_elem[num][0]][1];
 		double z1 = grid[num_elem[num][2]][1];
 		double r0 = grid[num_elem[num][0]][0];
 		double r1 = grid[num_elem[num][1]][0];
 
-		// Координаты центра элемента
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		double center_z = (z0 + z1) / 2.0;
 		double center_r = (r0 + r1) / 2.0;
 
-		// Получаем границы слоя
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 		double layer_r_min = sloy_dop[i][0];
 		double layer_r_max = sloy_dop[i][1];
 		double layer_z_min = sloy_dop[i][2];
 		double layer_z_max = sloy_dop[i][3];
 		double layer_sigma = sloy_dop[i][4];
 
-		// Проверяем, попадает ли центр элемента в слой
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
 		bool in_z_range = (center_z >= layer_z_min && center_z <= layer_z_max);
 		bool in_r_range = (center_r >= layer_r_min && center_r <= layer_r_max);
 
@@ -226,7 +227,7 @@ double sigma_dop(int num, vector<vector<double>> grid, vector<vector<int>> num_e
 
 
 
-// подсчет матрицы жесткости
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 void GetLocalG(double rp, double zs, double hr, double hz)
 {
 
@@ -256,7 +257,7 @@ void GetLocalG(double rp, double zs, double hr, double hz)
 	G[3][3] = 2 * a1 + 2 * a2 + 2 * a3 + 3 * a4;
 }
 
-// расчет начального шага
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 double step(double min, double max, int n, double k)
 {
 	if (k != 1)
@@ -268,7 +269,7 @@ double step(double min, double max, int n, double k)
 static void
 sigma_read() {
 	ifstream fin("sigma.txt");
-	size_t n_sloy; // кол-во слоев
+	size_t n_sloy; // пїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	fin >> n_sloy; sloy.resize(n_sloy);
 	for (int i = 0; i < n_sloy; i++) {
 		sloy[i].resize(5);
@@ -291,7 +292,7 @@ void SigmaGeneration()
 {
 	ifstream input("sigma.txt");
 
-	int n_sloy; // кол-во слоев
+	int n_sloy; // пїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
 	input >> n_sloy;
 
@@ -300,23 +301,23 @@ void SigmaGeneration()
 	for (int i = 0; i < n_sloy; i++)
 	{
 		sloy[i].resize(5);
-		// левая и правая границы нижняя граница .. верхняя граница .. sigma
+		// пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ .. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ .. sigma
 		input >> sloy[i][0] >> sloy[i][1] >> sloy[i][2] >> sloy[i][3] >> sloy[i][4];
 	}
-	int n_sloy_dop; // кол-во слоев
+	int n_sloy_dop; // пїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	input >> n_sloy_dop;
 	sloy_dop.resize(n_sloy_dop);
 
 	for (int i = 0; i < n_sloy_dop; i++)
 	{
 		sloy_dop[i].resize(5);
-		// левая и правая границы нижняя граница .. верхняя граница .. sigma
+		// пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ .. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ .. sigma
 		input >> sloy_dop[i][0] >> sloy_dop[i][1] >> sloy_dop[i][2] >> sloy_dop[i][3] >> sloy_dop[i][4];
 	}
 }
 
 // Use it once !!! No need to read mesh iteratively.
-static void 
+static void
 read_mesh() {
 	ifstream fin("input.txt");
 
@@ -325,7 +326,7 @@ read_mesh() {
 	main_mesh.nr.resize(main_mesh.r_amount); for (auto& n_i : main_mesh.nr) fin >> n_i;
 	main_mesh.kr.resize(main_mesh.r_amount); for (auto& k_i : main_mesh.kr) fin >> k_i;
 	main_mesh.r_direction.resize(main_mesh.r_amount); for (auto& d_i : main_mesh.r_direction) fin >> d_i;
-	
+
 	fin >> main_mesh.z_amount; main_mesh.z.resize(main_mesh.z_amount + 1);
 	for (auto& ri : main_mesh.z) fin >> ri;
 	main_mesh.nz.resize(main_mesh.z_amount); for (auto& n_i : main_mesh.nz) fin >> n_i;
@@ -333,7 +334,7 @@ read_mesh() {
 	main_mesh.z_direction.resize(main_mesh.z_amount); for (auto& d_i : main_mesh.z_direction) fin >> d_i;
 }
 
-static void 
+static void
 read_dop_mesh() {
 	ifstream fin("input_dop.txt");
 	fin >> dop_mesh.r_amount; dop_mesh.r.resize(dop_mesh.r_amount + 1);
@@ -354,19 +355,19 @@ read_dop_mesh() {
 	synthetic_anomaly.y1 = dop_mesh.z[2];
 }
 
-static void 
+static void
 main_grid_generation() {
 	ofstream node("node.txt");
 	ofstream elem("elem.txt");
 
-	// построение r
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ r
 	pointr = {}; pointr.resize(main_mesh.r.size()); copy(main_mesh.r.begin(), main_mesh.r.end(), pointr.begin());
 	for (int i = 0; i < pointr.size() - 1; i++)
 	{
-		// начальный шаг
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		double hr0 = step(pointr[i], pointr[i + 1], main_mesh.nr[i], main_mesh.kr[i]);
 
-		if (main_mesh.r_direction[i] == 1) // возрастает шаг
+		if (main_mesh.r_direction[i] == 1) // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		{
 			double r = pointr[i];
 			while (pointr[i + 1] - r > 1e-6)
@@ -376,7 +377,7 @@ main_grid_generation() {
 				hr0 *= main_mesh.kr[i];
 			}
 		}
-		else // убывает
+		else // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		{
 			double r = pointr[i + 1] - hr0;
 			while (r - pointr[i] > 1e-6)
@@ -388,17 +389,17 @@ main_grid_generation() {
 			gridr.push_back(pointr[i]);
 		}
 	}
-	//gridr.push_back(pointr[pointr.size() - 1]); // последнюю точку отдельно 
-	gridr.push_back(pointr.back()); // последнюю точку отдельно 
+	//gridr.push_back(pointr[pointr.size() - 1]); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+	gridr.push_back(pointr.back()); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 
-	// построение z
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ z
 	pointz = {}; pointz.resize(main_mesh.z.size()); copy(main_mesh.z.begin(), main_mesh.z.end(), pointz.begin());
 	for (int i = 0; i < pointz.size() - 1; i++)
 	{
-		// начальный шаг
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		double hz0 = step(pointz[i], pointz[i + 1], main_mesh.nz[i], main_mesh.kz[i]);
 
-		if (main_mesh.z_direction[i] == 1) // возрастает шаг
+		if (main_mesh.z_direction[i] == 1) // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		{
 			double z = pointz[i];
 			while (pointz[i + 1] - z > 1e-6)
@@ -408,7 +409,7 @@ main_grid_generation() {
 				hz0 *= main_mesh.kz[i];
 			}
 		}
-		else // убывает
+		else // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		{
 			double z = pointz[i + 1] - hz0;
 			while (z - pointz[i] > 1e-6)
@@ -420,8 +421,8 @@ main_grid_generation() {
 			gridz.push_back(pointz[i]);
 		}
 	}
-	//gridz.push_back(pointz[pointz.size() - 1]); // последнюю точку отдельно 
-	gridz.push_back(pointz.back()); // последнюю точку отдельно 
+	//gridz.push_back(pointz[pointz.size() - 1]); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+	gridz.push_back(pointz.back()); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 
 	sort(gridz.begin(), gridz.end());
 	sort(gridr.begin(), gridr.end());
@@ -446,18 +447,18 @@ main_grid_generation() {
 
 	nr_full = gridr.size() - 1;
 	nz_full = gridz.size() - 1;
-	n = nr_full * nz_full; // количество конечных элементов
+	n = nr_full * nz_full; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	num_elem.resize(n);
 	int tmp_num = 0;
 	for (int j = 0; j < nz_full; j++)
 		for (int i = 0; i < nr_full; i++)
 		{
 			num_elem[tmp_num].resize(4);
-			num_elem[tmp_num][0] = i + j * (nr_full + 1); // 1 вершина
-			num_elem[tmp_num][1] = i + j * (nr_full + 1) + 1; // 2 вершина
-			num_elem[tmp_num][2] = i + (j + 1) * (nr_full + 1); // 3 вершина
-			num_elem[tmp_num][3] = i + (j + 1) * (nr_full + 1) + 1; // 4 вершина
-			// вывод в файл
+			num_elem[tmp_num][0] = i + j * (nr_full + 1); // 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			num_elem[tmp_num][1] = i + j * (nr_full + 1) + 1; // 2 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			num_elem[tmp_num][2] = i + (j + 1) * (nr_full + 1); // 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			num_elem[tmp_num][3] = i + (j + 1) * (nr_full + 1) + 1; // 4 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			// пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
 			elem << tmp_num << " " << num_elem[tmp_num][0] << " " << num_elem[tmp_num][1] << " " << num_elem[tmp_num][2] << " " <<
 				num_elem[tmp_num][3] << ' ' << sigma(tmp_num, grid, num_elem) << endl;
 			tmp_num++;
@@ -466,19 +467,19 @@ main_grid_generation() {
 	elem.close();
 }
 
-static void 
+static void
 dop_grid_generation() {
 	ofstream fout_node_dop("node_dop.txt");
 	ofstream fout_elem_dop("elem_dop.txt");
 
-	// построение r
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ r
 	pointr = {}; pointr.resize(dop_mesh.r.size()); copy(dop_mesh.r.begin(), dop_mesh.r.end(), pointr.begin());
 	for (int i = 0; i < pointr.size() - 1; i++)
 	{
-		// начальный шаг
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		double hr0 = step(pointr[i], pointr[i + 1], dop_mesh.nr[i], dop_mesh.kr[i]);
 
-		if (dop_mesh.r_direction[i] == 1) // возрастает шаг
+		if (dop_mesh.r_direction[i] == 1) // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		{
 			double r = pointr[i];
 			while (pointr[i + 1] - r > 1e-6)
@@ -488,7 +489,7 @@ dop_grid_generation() {
 				hr0 *= dop_mesh.kr[i];
 			}
 		}
-		else // убывает
+		else // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		{
 			double r = pointr[i + 1] - hr0;
 			while (r - pointr[i] > 1e-6)
@@ -500,17 +501,17 @@ dop_grid_generation() {
 			gridr.push_back(pointr[i]);
 		}
 	}
-	//gridr.push_back(pointr[pointr.size() - 1]); // последнюю точку отдельно 
-	gridr.push_back(pointr.back()); // последнюю точку отдельно 
+	//gridr.push_back(pointr[pointr.size() - 1]); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+	gridr.push_back(pointr.back()); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 
-	// построение z
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ z
 	pointz = {}; pointz.resize(dop_mesh.z.size()); copy(dop_mesh.z.begin(), dop_mesh.z.end(), pointz.begin());
 	for (int i = 0; i < pointz.size() - 1; i++)
 	{
-		// начальный шаг
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		double hz0 = step(pointz[i], pointz[i + 1], dop_mesh.nz[i], dop_mesh.kz[i]);
 
-		if (dop_mesh.z_direction[i] == 1) // возрастает шаг
+		if (dop_mesh.z_direction[i] == 1) // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		{
 			double z = pointz[i];
 			while (pointz[i + 1] - z > 1e-6)
@@ -520,7 +521,7 @@ dop_grid_generation() {
 				hz0 *= dop_mesh.kz[i];
 			}
 		}
-		else // убывает
+		else // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		{
 			double z = pointz[i + 1] - hz0;
 			while (z - pointz[i] > 1e-6)
@@ -532,8 +533,8 @@ dop_grid_generation() {
 			gridz.push_back(pointz[i]);
 		}
 	}
-	//gridz.push_back(pointz[pointz.size() - 1]); // последнюю точку отдельно 
-	gridz.push_back(pointz.back()); // последнюю точку отдельно 
+	//gridz.push_back(pointz[pointz.size() - 1]); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+	gridz.push_back(pointz.back()); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 
 	sort(gridz.begin(), gridz.end());
 	sort(gridr.begin(), gridr.end());
@@ -558,18 +559,18 @@ dop_grid_generation() {
 
 	nr_full = gridr.size() - 1;
 	nz_full = gridz.size() - 1;
-	n = nr_full * nz_full; // количество конечных элементов
+	n = nr_full * nz_full; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	num_elem.resize(n);
 	int tmp_num = 0;
 	for (int j = 0; j < nz_full; j++)
 		for (int i = 0; i < nr_full; i++)
 		{
 			num_elem[tmp_num].resize(4);
-			num_elem[tmp_num][0] = i + j * (nr_full + 1); // 1 вершина
-			num_elem[tmp_num][1] = i + j * (nr_full + 1) + 1; // 2 вершина
-			num_elem[tmp_num][2] = i + (j + 1) * (nr_full + 1); // 3 вершина
-			num_elem[tmp_num][3] = i + (j + 1) * (nr_full + 1) + 1; // 4 вершина
-			// вывод в файл
+			num_elem[tmp_num][0] = i + j * (nr_full + 1); // 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			num_elem[tmp_num][1] = i + j * (nr_full + 1) + 1; // 2 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			num_elem[tmp_num][2] = i + (j + 1) * (nr_full + 1); // 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			num_elem[tmp_num][3] = i + (j + 1) * (nr_full + 1) + 1; // 4 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			// пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
 			fout_elem_dop << tmp_num << " " << num_elem[tmp_num][0] << " " << num_elem[tmp_num][1] << " " << num_elem[tmp_num][2] << " " <<
 				num_elem[tmp_num][3] << ' ' << sigma(tmp_num, grid, num_elem) << endl;
 			tmp_num++;
@@ -579,20 +580,20 @@ dop_grid_generation() {
 	fout_elem_dop.close();
 }
 
-// cетка
+// cпїЅпїЅпїЅпїЅ
 [[deprecated]]
 void GridGeneration()
 {
 	ofstream node("node.txt");
 	ofstream elem("elem.txt");
 
-	// построение r
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ r
 	for (int i = 0; i < pointr.size() - 1; i++)
 	{
-		// начальный шаг
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		double hr0 = step(pointr[i], pointr[i + 1], nr[i], kr[i]);
 
-		if (kr_route[i] == 1) // возрастает шаг
+		if (kr_route[i] == 1) // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		{
 			double r = pointr[i];
 			while (pointr[i + 1] - r > 1e-6)
@@ -602,7 +603,7 @@ void GridGeneration()
 				hr0 *= kr[i];
 			}
 		}
-		else // убывает
+		else // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		{
 			double r = pointr[i + 1] - hr0;
 			while (r - pointr[i] > 1e-6)
@@ -614,15 +615,15 @@ void GridGeneration()
 			gridr.push_back(pointr[i]);
 		}
 	}
-	gridr.push_back(pointr[pointr.size() - 1]); // последнюю точку отдельно 
+	gridr.push_back(pointr[pointr.size() - 1]); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 
-	// построение z
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ z
 	for (int i = 0; i < pointz.size() - 1; i++)
 	{
-		// начальный шаг
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		double hz0 = step(pointz[i], pointz[i + 1], nz[i], kz[i]);
 
-		if (kz_route[i] == 1) // возрастает шаг
+		if (kz_route[i] == 1) // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 		{
 			double z = pointz[i];
 			while (pointz[i + 1] - z > 1e-6)
@@ -632,7 +633,7 @@ void GridGeneration()
 				hz0 *= kz[i];
 			}
 		}
-		else // убывает
+		else // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		{
 			double z = pointz[i + 1] - hz0;
 			while (z - pointz[i] > 1e-6)
@@ -644,7 +645,7 @@ void GridGeneration()
 			gridz.push_back(pointz[i]);
 		}
 	}
-	gridz.push_back(pointz[pointz.size() - 1]); // последнюю точку отдельно 
+	gridz.push_back(pointz[pointz.size() - 1]); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 
 	sort(gridz.begin(), gridz.end());
 	sort(gridr.begin(), gridr.end());
@@ -669,52 +670,52 @@ void GridGeneration()
 
 	nr_full = gridr.size() - 1;
 	nz_full = gridz.size() - 1;
-	n = nr_full * nz_full; // количество конечных элементов
+	n = nr_full * nz_full; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	num_elem.resize(n);
 	int tmp_num = 0;
 	for (int j = 0; j < nz_full; j++)
 		for (int i = 0; i < nr_full; i++)
 		{
 			num_elem[tmp_num].resize(4);
-			num_elem[tmp_num][0] = i + j * (nr_full + 1); // 1 вершина
-			num_elem[tmp_num][1] = i + j * (nr_full + 1) + 1; // 2 вершина
-			num_elem[tmp_num][2] = i + (j + 1) * (nr_full + 1); // 3 вершина
-			num_elem[tmp_num][3] = i + (j + 1) * (nr_full + 1) + 1; // 4 вершина
-			// вывод в файл
+			num_elem[tmp_num][0] = i + j * (nr_full + 1); // 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			num_elem[tmp_num][1] = i + j * (nr_full + 1) + 1; // 2 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			num_elem[tmp_num][2] = i + (j + 1) * (nr_full + 1); // 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			num_elem[tmp_num][3] = i + (j + 1) * (nr_full + 1) + 1; // 4 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			// пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
 			elem << tmp_num << " " << num_elem[tmp_num][0] << " " << num_elem[tmp_num][1] << " " << num_elem[tmp_num][2] << " " <<
 				num_elem[tmp_num][3] << ' ' << sigma(tmp_num, grid, num_elem) << endl;
 			tmp_num++;
 		}
 }
 
-// портрет матрицы
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 void MatrixPortrait(vector<vector<int>> num_elem)
 {
-	vector<vector<int>> list(nv); // вспомогательный массив по количеству узлов
-	vector<int> tmp(4); // вспомогательный вектор вершин одного элемента
+	vector<vector<int>> list(nv); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+	vector<int> tmp(4); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	for (int i = 0; i < nv; i++)
 		list[i];
-	int number = 0; // количество элементов для массива ig
-	for (int i = 0; i < num_elem.size(); i++) //идем по конечным элементам
+	int number = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ ig
+	for (int i = 0; i < num_elem.size(); i++) //пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	{
 		for (int j = 0; j < 4; j++)
 			tmp[j] = num_elem[i][j];
-		reverse(tmp.begin(), tmp.end()); //сортируем по убывaнию, т.к. портрет сим-метричный (в нашем случае переворачиваем т.к. все изначально отсортировано)
+		reverse(tmp.begin(), tmp.end()); //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅaпїЅпїЅпїЅ, пїЅ.пїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ.пїЅ. пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 		for (int j = 0; j < 4; j++)
 			for (int k = j + 1; k < 4; k++)
 			{
 				int flag = 1;
 				for (int p = 0; p < list[tmp[j]].size() && flag; p++)
-					if (list[tmp[j]][p] == tmp[k]) flag = 0; // если элемент уже есть в списке смежности
+					if (list[tmp[j]][p] == tmp[k]) flag = 0; // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				if (flag)
 				{
-					list[tmp[j]].push_back(tmp[k]); // если в списке еще нет такого элемента, то добавляем
-					number++; // увеличиваем количество для jg
+					list[tmp[j]].push_back(tmp[k]); // пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+					number++; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ jg
 				}
 			}
 	}
 	for (int i = 0; i < nv; i++)
-		sort(list[i].begin(), list[i].end()); //сортируем по возрастанию 
+		sort(list[i].begin(), list[i].end()); //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 
 	ig.resize(nv + 1);
 
@@ -727,12 +728,12 @@ void MatrixPortrait(vector<vector<int>> num_elem)
 		for (int j = 0; j < list[i].size(); j++)
 			jg.push_back(list[i][j]);
 
-	//выделение памяти для работы с векторами
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	al.resize(number);
 	au.resize(number);
 	di.resize(nv);
 	b.resize(nv);
-	//ЛОС
+	//пїЅпїЅпїЅ
 	L.resize(number);
 	U.resize(number);
 	D.resize(nv);
@@ -753,10 +754,10 @@ void MatrixPortrait(vector<vector<int>> num_elem)
 	}
 }
 
-// подсчет локальной матрицы
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 void LocalMatrix(int num, vector<vector<double>> grid, vector<vector<int>> num_elem)
 {
-	//вершины прямоугольника
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	int a = num_elem[num][0];
 	int b = num_elem[num][1];
 	int c = num_elem[num][2];
@@ -776,7 +777,7 @@ void LocalMatrix(int num, vector<vector<double>> grid, vector<vector<int>> num_e
 		}
 }
 
-// подсчет локальной матрицы
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 void LocalMatrix_dop(int num, vector<vector<double>> grid, vector<vector<int>> num_elem)
 {
 	for (int i = 0; i < 4; i++)
@@ -784,7 +785,7 @@ void LocalMatrix_dop(int num, vector<vector<double>> grid, vector<vector<int>> n
 		localb[i] = 0;
 	}
 
-	//вершины прямоугольника
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	int a = num_elem[num][0];
 	int b = num_elem[num][1];
 	int c = num_elem[num][2];
@@ -795,7 +796,7 @@ void LocalMatrix_dop(int num, vector<vector<double>> grid, vector<vector<int>> n
 	hr = grid[b][0] - grid[a][0];
 	hz = grid[c][1] - grid[b][1];
 
-	vector<double> q; // правая часть задачи V_n
+	vector<double> q; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ V_n
 	q.push_back(result_q(grid[a][0], grid[a][1], qn, grid_n, num_elem_n));
 	q.push_back(result_q(grid[b][0], grid[b][1], qn, grid_n, num_elem_n));
 	q.push_back(result_q(grid[c][0], grid[c][1], qn, grid_n, num_elem_n));
@@ -816,10 +817,10 @@ void LocalMatrix_dop(int num, vector<vector<double>> grid, vector<vector<int>> n
 		}
 }
 
-// добавление локальной матрицы в глобальную
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 void AddInGlobal(int num, vector<vector<int>> num_elem)
 {
-	// диагональ
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	for (int i = 0; i < 4; i++)
 		di[num_elem[num][i]] += localA[i][i];
 
@@ -845,10 +846,10 @@ void AddInGlobal(int num, vector<vector<int>> num_elem)
 	}
 }
 
-// добавление локальной матрицы в глобальную
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 void AddInGlobal_dop(int num, vector<vector<int>> num_elem)
 {
-	// диагональ
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	for (int i = 0; i < 4; i++)
 		di[num_elem[num][i]] += localA[i][i];
 
@@ -877,16 +878,16 @@ void AddInGlobal_dop(int num, vector<vector<int>> num_elem)
 		b[num_elem[num][i]] += localb[i];
 }
 
-// учет первых краевых условий
+// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 void First(vector<vector<double>> grid)
 {
 	for (int i = 0; i < grid.size(); i++) {
-		// нижняя граница
+		// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		if (grid[i][1] == z_min) {
 			di[i] = 1e+15;
 			b[i] = 0;
 		}
-		// правая граница
+		// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		if (grid[i][0] == r_max) {
 			di[i] = 1e+15;
 			b[i] = 0;
@@ -914,9 +915,9 @@ void LU()
 		{
 			double s1 = 0;
 			double s2 = 0;
-			int j = jg[k]; // номер столбца(строки) элемента al(au)
-			int ja0 = ig[j]; // номер, с которого начинается элементы столб-ца(строки)
-			int ja1 = ig[j + 1]; // номер, с которого начинаются элементы нового столбца(строки)
+			int j = jg[k]; // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ(пїЅпїЅпїЅпїЅпїЅпїЅ) пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ al(au)
+			int ja0 = ig[j]; // пїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅ(пїЅпїЅпїЅпїЅпїЅпїЅ)
+			int ja1 = ig[j + 1]; // пїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ(пїЅпїЅпїЅпїЅпїЅпїЅ)
 			int ki = ia0;
 			int kj = ja0;
 			while (ki < k && kj < ja1)
@@ -965,7 +966,7 @@ void USolve(vector<double>& x1, vector<double> x2)
 	}
 }
 
-// умножения вектора на матрицу A
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ A
 void multiplication_matrix_on_vector(vector<double> a, vector<double>& b)
 {
 	for (int i = 0; i < nv; i++)
@@ -981,7 +982,7 @@ void multiplication_matrix_on_vector(vector<double> a, vector<double>& b)
 	}
 }
 
-// умножение двух векторов
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 double vectors_multiplication(vector<double> v1, vector<double> v2)
 {
 	double s = 0;
@@ -990,7 +991,7 @@ double vectors_multiplication(vector<double> v1, vector<double> v2)
 	return s;
 }
 
-// норма вектора
+// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 double norma(vector<double> vector)
 {
 	double s = 0;
@@ -1009,7 +1010,7 @@ void LOS()
 {
 	double alpha, betta;
 	double pk_1_rk_1, pk_1_pk_1;
-	// нулевое начальное приближение
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	for (int i = 0; i < nv; i++)
 		x0[i] = 0;
 	multiplication_matrix_on_vector(x0, y); // Ax0
@@ -1041,7 +1042,7 @@ void LOS()
 }
 #pragma endregion IMMUTABLE
 
-// прямая задача
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 vector<double> direct_task()
 {
 	for (int i = 0; i < num_elem_n.size(); i++)
@@ -1089,7 +1090,7 @@ vector<double> direct_task()
 	LU();
 	LOS();
 	//user_pardiso(ig, jg, di, al, au, b, x0);
-	// меняем значения для нового слоя 
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ 
 	for (int i = 0; i < grid_n.size(); i++)
 	{
 		di[i] = 0;
@@ -1107,7 +1108,7 @@ vector<double> direct_task()
 	return x0;
 }
 
-// прямая задача
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 vector<double> direct_task_dop()
 {
 	for (int i = 0; i < num_elem_dop.size(); i++)
@@ -1119,7 +1120,7 @@ vector<double> direct_task_dop()
 	LU();
 	LOS();
 	//user_pardiso(ig, jg, di, al, au, b, x0);
-	// меняем значения для нового слоя 
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ 
 	for (int i = 0; i < grid_dop.size(); i++)
 	{
 		di[i] = 0;
@@ -1159,6 +1160,11 @@ void result_function_q(vector<double> q, vector<vector<double>> grid, vector<vec
 	cout << scientific << setprecision(8) << result_xyz_q(200, 0, q, grid, num_elem) << endl;
 	cout << scientific << setprecision(8) << result_xyz_q(250, 0, q, grid, num_elem) << endl;
 	cout << scientific << setprecision(8) << result_xyz_q(300, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(50, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(10, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(350, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(400, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(450, 0, q, grid, num_elem) << endl;
 	cout << endl;
 }
 
@@ -1168,15 +1174,24 @@ void result_function_q(vector<double>& vec, vector<double> q, vector<vector<doub
 	vec[2] = result_xyz_q(200, 0, q, grid, num_elem);
 	vec[3] = result_xyz_q(250, 0, q, grid, num_elem);
 	vec[4] = result_xyz_q(300, 0, q, grid, num_elem);
+	vec[5] = result_xyz_q(50, 0, q, grid, num_elem);
+	vec[6] = result_xyz_q(10, 0, q, grid, num_elem);
+	vec[7] = result_xyz_q(350, 0, q, grid, num_elem);
+	vec[8] = result_xyz_q(400, 0, q, grid, num_elem);
+	vec[9] = result_xyz_q(450, 0, q, grid, num_elem);
 }
 
-double derivative(double a, double b) {
-	return (b - a) / (0.01 * tmp_u);
+//double derivative(double a, double b) {
+//	return (b - a) / (0.05 * tmp_u);
+//}
+
+double derivative(double a, double b, double znam) {
+	return (b - a) / (0.05 * znam);
 }
 
 void clearAllVectors()
 {
-	// Основные матрицы и векторы
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	G.clear();
 	G.resize(4);
 
@@ -1200,7 +1215,7 @@ void clearAllVectors()
 	locala2.clear();
 	locala2.resize(2);
 
-	// Векторы для СЛАУ
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 	ig.clear();
 	jg.clear();
 	al.clear();
@@ -1208,7 +1223,7 @@ void clearAllVectors()
 	di.clear();
 	b.clear();
 
-	// Векторы для ЛОС
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ
 	L.clear();
 	U.clear();
 	D.clear();
@@ -1219,7 +1234,7 @@ void clearAllVectors()
 	p.clear();
 	t.clear();
 
-	// Векторы для сетки
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	gridr.clear();
 	gridz.clear();
 	pointz.clear();
@@ -1232,7 +1247,7 @@ void clearAllVectors()
 	kr_route.clear();
 }
 
-static void 
+static void
 field_selection() {
 	//SigmaGeneration();
 
@@ -1240,24 +1255,23 @@ field_selection() {
 	main_grid_generation();
 	//GridGeneration();
 
-	// сохранение сетки 
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 
 	for (int i = 0; i < grid.size(); i++) {
 		grid_n.push_back(grid[i]);
 	}
 	for (int i = 0; i < num_elem.size(); i++) {
-
 		num_elem_n.push_back(num_elem[i]);
 	}
 
 	MatrixPortrait(num_elem_n);
-	qn = direct_task();// прямая задача
+	qn = direct_task(); // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
-	// обнуление параметров
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	clearAllVectors();
 
 	dop_grid_generation();
 	//GridGeneration();
-	// сохранение сетки 
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 
 	for (int i = 0; i < grid.size(); i++) {
 
 		grid_dop.push_back(grid[i]);
@@ -1267,10 +1281,10 @@ field_selection() {
 		num_elem_dop.push_back(num_elem[i]);
 	}
 	MatrixPortrait(num_elem_dop);
-	q_dop = direct_task_dop(); // прямая задача дополнительная
+	q_dop = direct_task_dop(); // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	qv.resize(qn.size());
 
-	// итоговый результат 
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 	for (int i = 0; i < grid_n.size(); i++)
 	{
 		qv[i] = result_q(grid_n[i][0], grid_n[i][1], qn, grid_n, num_elem_n) +
@@ -1290,7 +1304,7 @@ void field_selection_direct_task()
 	main_grid_generation();
 	//GridGeneration();
 
-	// сохранение сетки 
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 
 	for (int i = 0; i < grid.size(); i++) {
 		grid_n.push_back(grid[i]);
 	}
@@ -1301,14 +1315,14 @@ void field_selection_direct_task()
 
 
 	MatrixPortrait(num_elem_n);
-	qn = direct_task(); // прямая задача
-	// обнуление параметров
+	qn = direct_task(); // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	clearAllVectors();
 	nv = grid_dop.size();
 
 	dop_grid_generation();
 	//GridGeneration();
-	// сохранение сетки
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	grid_dop = {}; num_elem_dop = {};
 	for (int i = 0; i < grid.size(); i++) {
 
@@ -1321,8 +1335,8 @@ void field_selection_direct_task()
 
 
 	MatrixPortrait(num_elem_dop);
-	q_dop = direct_task_dop(); // прямая задача дополнительная
-	// итоговый результат 
+	q_dop = direct_task_dop(); // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 	for (int i = 0; i < grid_n.size(); i++)
 	{
 		qv[i] = result_q(grid_n[i][0], grid_n[i][1], qn, grid_n, num_elem_n) +
@@ -1331,73 +1345,190 @@ void field_selection_direct_task()
 	}
 }
 
+vector<double> gauss(vector<vector<double>> A, vector<double> b) {
+	int n = A.size();
+	matrix AA = A;
+	vector<double> bb = b;
+	vector<double> Alfa(n);
+	for (int f = 0; f < n; f++)
+		Alfa[f] = AA[f][f] * 1e-8;
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
+	for (int i = 0; i < n; i++) {
+		// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+		int maxRow = i;
+		for (int k = i + 1; k < n; k++) {
+			if (abs(AA[k][i]) > abs(AA[maxRow][i])) {
+				maxRow = k;
+			}
+		}
+
+		swap(AA[i], AA[maxRow]);
+		swap(bb[i], bb[maxRow]);
+
+		double pivot = AA[i][i];
+		if (abs(pivot) < 1e-12) {
+			throw runtime_error("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
+		}
+
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ i
+		for (int j = i; j < n; j++) {
+			AA[i][j] /= pivot;
+		}
+		bb[i] /= pivot;
+
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+		for (int k = i + 1; k < n; k++) {
+			double factor = AA[k][i];
+			for (int j = i; j < n; j++) {
+				AA[k][j] -= factor * AA[i][j];
+			}
+			bb[k] -= factor * bb[i];
+		}
+
+		for (int k = 0; k < n; k++)
+		{
+			double sum = 0;
+			for (int j = 0; j < n; j++)
+			{
+				sum += AA[k][j];
+			}
+			if (sum == 0)
+			{
+				Alfa[k] *= 1.5;
+				AA = A;
+				bb = b;
+				AA[k][k] += Alfa[k];
+				i = -1;
+			}
+		}
+	}
+
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
+	vector<double> x(n);
+	for (int i = n - 1; i >= 0; i--) {
+		x[i] = b[i];
+		for (int j = i + 1; j < n; j++) {
+			x[i] -= AA[i][j] * x[j];
+		}
+	}
+
+	return x;
+}
+
+
 void inverse_problem() {
+
 	cout << "\tGenerated synthetic data on receivers:" << endl;
 	result_function_q(true_eps, qv, grid_n, num_elem_n);
 	result_function_q(qv, grid_n, num_elem_n);
-	//true_eps[0] *= 1.05; // зашумление
+	//true_eps[0] *= 1.05; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	decltype(initial_params) template_params(initial_params.begin(), initial_params.end());
 	//tmp_u = start_u;
-	tmp_u = initial_params[0];
+
+	vector<double> prms(initial_params.begin(), initial_params.end());
+	//tmp_u = initial_params[0];
 	for (int iter = 0; iter < max_iter; iter++) {
-		double sum = 0; // левая часть уравнения
-		double f = 0; // правая часть уравнения
+		double sum = 0; // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+		double f = 0; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		//tok = tmp_u;
 		//sloy_dop[1][2] = tmp_u;
 
 
 		// ACHTUNG !!!
-		sloy_dop[0][3] = tmp_u;
-		dop_mesh.z[2] = sloy_dop[0][3];
 
 
-		// приращение
+
+		sloy_dop[0][0] = prms[0];
+		sloy_dop[0][1] = prms[1];
+		dop_mesh.r[1] = sloy_dop[0][0];
+		dop_mesh.r[2] = sloy_dop[0][1];
+
+
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		field_selection_direct_task();
 		result_function_q(tmp_eps, qv, grid_n, num_elem_n);
 		result_function_q(qv, grid_n, num_elem_n);
 
 		//tok = 1.05 * tmp_u;
 		//sloy_dop[1][2] = 1.05 * tmp_u;
-		sloy_dop[0][3] = 1.05 * tmp_u;
-		dop_mesh.z[2] = sloy_dop[0][3];
+		sloy_dop[0][0] = 1.05 * prms[0];
+		sloy_dop[0][1] = 1.05 * prms[1];
+		dop_mesh.r[1] = sloy_dop[0][0];
+		dop_mesh.r[2] = sloy_dop[0][1];
 
 
 		field_selection_direct_task();
 		result_function_q(delta_tmp_eps, qv, grid_n, num_elem_n);
 		result_function_q(qv, grid_n, num_elem_n);
 
-		// слау
-		for (int i = 0; i < 5; i++) {
-			sum += w * w * pow(derivative(delta_tmp_eps[i], tmp_eps[i]), 2);
-		}
-		sum += alpha;
-		for (int i = 0; i < 5; i++) {
-			f -= w * w * derivative(delta_tmp_eps[i], tmp_eps[i]) * (true_eps[i] - tmp_eps[i]);
-		}
-		f -= alpha * (tmp_u - initial_params[0]);
+		// пїЅпїЅпїЅпїЅ
+		//for (int i = 0; i < 5; i++) {
+		//	sum += w * w * pow(derivative(delta_tmp_eps[i], tmp_eps[i]), 2);
+		//}
+		//sum += alpha;
+		//for (int i = 0; i < 5; i++) {
+		//	f -= w * w * derivative(delta_tmp_eps[i], tmp_eps[i]) * (true_eps[i] - tmp_eps[i]);
+		//}
 
-		delta_u = f / sum;
-		// итерация
+
+		// Regularization !!!
+		decltype(initial_params.size()) params_amount = initial_params.size();
+		vector<double> alph_v(params_amount);
+		matrix A; A.resize(params_amount); for (auto& row : A) row.resize(params_amount);
+		for (size_t i(0); i < params_amount; ++i) {
+			for (size_t j(0); j < params_amount; ++j) {
+				double_t sum0(0.0);
+				for (size_t k(0); k < 10; ++k) {
+					sum0 += w * w * derivative(delta_tmp_eps[k], tmp_eps[i], prms[i]) * derivative(delta_tmp_eps[k], tmp_eps[j], prms[j]);
+				}
+				A[i][j] = sum0;
+			}
+		}
+		vector<double> b(params_amount);
+		for (size_t i(0); i < params_amount; ++i) {
+			double_t sum0(0.0);
+			for (size_t k(0); k < 10; ++k) {
+				sum0 -= w * w * derivative(delta_tmp_eps[k], tmp_eps[i], prms[i]) * (true_eps[k] - tmp_eps[k]);
+			}
+			b[i] = sum0;
+		}
+		for (size_t i(0); i < params_amount; ++i)
+			b[i] -= alph_v[i] * (prms[i] - initial_params[i]);
+		//f -= alpha * (tmp_u - initial_params[0]);
+
+		//delta_u = f / sum;
+		decltype(auto) sln = gauss(A, b);
+
+
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		double J_prev = 0;
 		double J_next = 0;
-		for (int j = 0; j < 5; j++) {
+		for (int j = 0; j < 10; j++) {
 			J_prev = 0;
-			for (int i = 0; i < 5; i++) {
+			for (int i = 0; i < 10; i++) {
 				//w = 1 / tmp_eps[i];
 				J_prev += pow(w * (true_eps[i] - tmp_eps[i]), 2);
 			}
 			J_next = 0;
 			//tok = delta_u * betta + tmp_u;
 			//sloy_dop[1][2] = delta_u * betta + tmp_u;
-			sloy_dop[0][3] = delta_u * betta + tmp_u;
-			dop_mesh.z[2] = sloy_dop[0][3];
+
+			sloy_dop[0][0] = sln[0] * betta + prms[0];
+			sloy_dop[0][1] = sln[1] * betta + prms[1];
+			dop_mesh.r[1] = sloy_dop[0][0];
+			dop_mesh.r[2] = sloy_dop[0][1];
+
+
+
+			//sloy_dop[0][3] = delta_u * betta + tmp_u;
+			//dop_mesh.z[2] = sloy_dop[0][3];
 
 
 			field_selection_direct_task();
 			result_function_q(next_eps, qv, grid_n, num_elem_n);
 			result_function_q(qv, grid_n, num_elem_n);
 
-			for (int i = 0; i < 5; i++) {
+			for (int i = 0; i < 10; i++) {
 				//w = 1 / next_eps[i];
 				J_next += pow(w * (true_eps[i] - next_eps[i]), 2);
 			}
@@ -1415,7 +1546,8 @@ void inverse_problem() {
 		cout << "iter = " << iter + 1 << " x1 = " << sloy_dop[0][1] << endl;
 		cout << "iter = " << iter + 1 << " y0 = " << sloy_dop[0][2] << endl;
 		cout << "iter = " << iter + 1 << " y1 = " << sloy_dop[0][3] << endl;
-		cout << delta_u << endl;
+		cout << sln[0] << endl;
+		cout << sln[1] << endl << endl;
 
 		dop_mesh.r[1] = sloy_dop[0][0];
 		dop_mesh.r[2] = sloy_dop[0][1];
@@ -1429,7 +1561,8 @@ void inverse_problem() {
 		else {
 			//tmp_u = tok;
 			//tmp_u = sloy_dop[1][2];
-			tmp_u = sloy_dop[0][3];
+			prms[0] = sloy_dop[0][0];
+			prms[1] = sloy_dop[0][1];
 
 
 		}
@@ -1438,13 +1571,21 @@ void inverse_problem() {
 
 int main()
 {
+	//matrix A{ {1, 2, 3},
+	//		  {0, 1, 2},
+	//		  {0, 1, 2} };
+	//vector<double> b {1, 2, 1};
+	//decltype(auto) sln = gauss(A, b);
+	//for (auto iter = sln.begin(); iter != sln.end(); iter++)
+	//	cout << *iter << endl;
+	//return 0;
 	ofstream output("q.txt");
 	// step 1. read data
 	cout << "Reading data" << endl;
 	read_mesh();
 	read_dop_mesh();
 	sigma_read();
-	
+
 	// step 2. generate synthetic
 	cout << "Generate synthetic" << endl;
 	field_selection();

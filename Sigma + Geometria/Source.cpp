@@ -67,10 +67,10 @@ vector<double> y;
 vector<double> p;
 vector<double> t;
 // обратная задача
-vector<double> true_eps(5); // истинное решение
-vector<double> tmp_eps(5); // решение на текущей итерации прямой задачи
-vector<double> next_eps(5); // решение на следующей итерации прямой задачи
-vector<double> delta_tmp_eps(5); // решение на текущей итерации прямой задачи с прираще-нием
+vector<double> true_eps(10); // истинное решение
+vector<double> tmp_eps(10); // решение на текущей итерации прямой задачи
+vector<double> next_eps(10); // решение на следующей итерации прямой задачи
+vector<double> delta_tmp_eps(10); // решение на текущей итерации прямой задачи с прираще-нием
 double start_u = 1e-6; // начальное приближение (u0)
 //double tmp_u; // решение на текущей итерации обратной задачи
 //double delta_u; // приращение на текущей итерации
@@ -107,8 +107,8 @@ double yB = 100.0;
 double zB = -VEL_LEN;
 
 
-vector<double_t> initial_params = { -1250.0 /*y0*/,
-									 -200.0 /*y1*/ };
+vector<double_t> initial_params = { -1550.0,
+									-125.0/*z0*/ };
 
 
 struct anomaly {
@@ -1160,6 +1160,11 @@ void result_function_q(vector<double> q, vector<vector<double>> grid, vector<vec
 	cout << scientific << setprecision(8) << result_xyz_q(200, 0, q, grid, num_elem) << endl;
 	cout << scientific << setprecision(8) << result_xyz_q(250, 0, q, grid, num_elem) << endl;
 	cout << scientific << setprecision(8) << result_xyz_q(300, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(1800, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(1900, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(2000, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(2100, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(2200, 0, q, grid, num_elem) << endl;
 	cout << endl;
 }
 
@@ -1169,6 +1174,11 @@ void result_function_q(vector<double>& vec, vector<double> q, vector<vector<doub
 	vec[2] = result_xyz_q(200, 0, q, grid, num_elem);
 	vec[3] = result_xyz_q(250, 0, q, grid, num_elem);
 	vec[4] = result_xyz_q(300, 0, q, grid, num_elem);
+	vec[5] = result_xyz_q(1800, 0, q, grid, num_elem);
+	vec[6] = result_xyz_q(1900, 0, q, grid, num_elem);
+	vec[7] = result_xyz_q(2000, 0, q, grid, num_elem);
+	vec[8] = result_xyz_q(2100, 0, q, grid, num_elem);
+	vec[9] = result_xyz_q(2200, 0, q, grid, num_elem);
 }
 
 //double derivative(double a, double b) {
@@ -1337,50 +1347,66 @@ void field_selection_direct_task()
 
 vector<double> gauss(vector<vector<double>> A, vector<double> b) {
 	int n = A.size();
+	std::vector<double> alph(A.size());
 
+	decltype(auto) A_copy = A;
+	decltype(auto) b_copy = b;
+	for (size_t i(0); i < n; ++i) {
+		alph[i] = A[i][i] * 1e-7;
+		A[i][i] += alph[i];
+	}
+	cout << "Alph was:" << endl;
+	for (const auto& ai : alph) cout << ai << endl;
 	// Прямой ход
 	for (int i = 0; i < n; i++) {
 		// Выбор главного элемента
 		int maxRow = i;
 		for (int k = i + 1; k < n; k++) {
-			if (abs(A[k][i]) > abs(A[maxRow][i])) {
+			if (abs(A_copy[k][i]) > abs(A_copy[maxRow][i])) {
 				maxRow = k;
 			}
 		}
 
-		swap(A[i], A[maxRow]);
-		swap(b[i], b[maxRow]);
+		swap(A_copy[i], A_copy[maxRow]);
+		swap(b_copy[i], b_copy[maxRow]);
 
-		double pivot = A[i][i];
-		if (abs(pivot) < 1e-12) {
-			throw runtime_error("Система вырождена");
-		}
+		double pivot = A_copy[i][i];
 
-		// Нормализация строки i
-		for (int j = i; j < n; j++) {
-			A[i][j] /= pivot;
-		}
-		b[i] /= pivot;
-
-		// Исключение
-		for (int k = i + 1; k < n; k++) {
-			double factor = A[k][i];
+		if (abs(pivot) >= 1e-12) {
+			// Нормализация строки i
 			for (int j = i; j < n; j++) {
-				A[k][j] -= factor * A[i][j];
+				A_copy[i][j] /= pivot;
 			}
-			b[k] -= factor * b[i];
+			b_copy[i] /= pivot;
+
+			// Исключение
+			for (int k = i + 1; k < n; k++) {
+				double factor = A_copy[k][i];
+				for (int j = i; j < n; j++) {
+					A_copy[k][j] -= factor * A_copy[i][j];
+				}
+				b_copy[k] -= factor * b_copy[i];
+			}
+		}
+		else {
+			A[i][i] += alph[i];
+			A_copy = A;
+			b_copy = b;
+			alph[i] *= 1.5;
+			i = -1;
 		}
 	}
 
 	// Обратный ход
 	vector<double> x(n);
 	for (int i = n - 1; i >= 0; i--) {
-		x[i] = b[i];
+		x[i] = b_copy[i];
 		for (int j = i + 1; j < n; j++) {
-			x[i] -= A[i][j] * x[j];
+			x[i] -= A_copy[i][j] * x[j];
 		}
 	}
-
+	cout << "Alph became:" << endl;
+	for (const auto& ai : alph) cout << ai << endl;
 	return x;
 }
 
@@ -1395,6 +1421,7 @@ void inverse_problem() {
 	//tmp_u = start_u;
 	
 	vector<double> prms(initial_params.begin(), initial_params.end());
+	vector<double> alph; alph.resize(initial_params.size());
 	//tmp_u = initial_params[0];
 	for (int iter = 0; iter < max_iter; iter++) {
 		double sum = 0; // левая часть уравнения
@@ -1409,8 +1436,10 @@ void inverse_problem() {
 		
 		sloy_dop[0][2] = prms[0];
 		sloy_dop[0][3] = prms[1];
+		//sloy_dop[0][1] = prms[1];
 		dop_mesh.z[1] = sloy_dop[0][2];
 		dop_mesh.z[2] = sloy_dop[0][3];
+		//dop_mesh.r[2] = sloy_dop[0][1];
 
 
 		// приращение
@@ -1422,6 +1451,7 @@ void inverse_problem() {
 		//sloy_dop[1][2] = 1.05 * tmp_u;
 		sloy_dop[0][2] = 1.05 * prms[0];
 		sloy_dop[0][3] = 1.05 * prms[1];
+		//sloy_dop[0][1] = 1.5 * prms[1];
 		dop_mesh.z[1] = sloy_dop[0][2];
 		dop_mesh.z[2] = sloy_dop[0][3];
 
@@ -1447,8 +1477,8 @@ void inverse_problem() {
 		for (size_t i(0); i < params_amount; ++i) {
 			for (size_t j(0); j < params_amount; ++j) {
 				double_t sum0(0.0);
-				for (size_t k(0); k < 5; ++k) {
-					sum0 += w * w * derivative(delta_tmp_eps[k], tmp_eps[i], prms[i]) * derivative(delta_tmp_eps[k], tmp_eps[j], prms[j]);
+				for (size_t k(0); k < 10; ++k) {
+					sum0 += w * w * derivative(delta_tmp_eps[k], tmp_eps[k], prms[i]) * derivative(delta_tmp_eps[k], tmp_eps[k], prms[j]);
 				}
 				A[i][j] = sum0;
 			}
@@ -1456,13 +1486,13 @@ void inverse_problem() {
 		vector<double> b(params_amount);
 		for (size_t i(0); i < params_amount; ++i) {
 			double_t sum0(0.0);
-			for (size_t k(0); k < 5; ++k) {
-				sum0 -= w * w * derivative(delta_tmp_eps[k], tmp_eps[i], prms[i]) * (true_eps[k] - tmp_eps[k]);
+			for (size_t k(0); k < 10; ++k) {
+				sum0 -= w * w * derivative(delta_tmp_eps[k], tmp_eps[k], prms[i]) * (true_eps[k] - tmp_eps[k]);
 			}
 			b[i] = sum0;
 		}
-		for (size_t i(0); i < params_amount; ++i)
-			b[i] -= alph_v[i] * (prms[i] - initial_params[i]);
+		//for (size_t i(0); i < params_amount; ++i)
+		//	b[i] -= alph_v[i] * (prms[i] - initial_params[i]);
 		//f -= alpha * (tmp_u - initial_params[0]);
 
 		//delta_u = f / sum;
@@ -1472,9 +1502,9 @@ void inverse_problem() {
 		// итерация
 		double J_prev = 0;
 		double J_next = 0;
-		for (int j = 0; j < 5; j++) {
+		for (int j = 0; j < 10; j++) {
 			J_prev = 0;
-			for (int i = 0; i < 5; i++) {
+			for (int i = 0; i < 10; i++) {
 				//w = 1 / tmp_eps[i];
 				J_prev += pow(w * (true_eps[i] - tmp_eps[i]), 2);
 			}
@@ -1484,6 +1514,7 @@ void inverse_problem() {
 			
 			sloy_dop[0][2] = sln[0] * betta + prms[0];
 			sloy_dop[0][3] = sln[1] * betta + prms[1];
+			//sloy_dop[0][1] = sln[1] * betta + prms[1];
 			dop_mesh.z[1] = sloy_dop[0][2];
 			dop_mesh.z[2] = sloy_dop[0][3];
 			
@@ -1497,7 +1528,7 @@ void inverse_problem() {
 			result_function_q(next_eps, qv, grid_n, num_elem_n);
 			result_function_q(qv, grid_n, num_elem_n);
 
-			for (int i = 0; i < 5; i++) {
+			for (int i = 0; i < 10; i++) {
 				//w = 1 / next_eps[i];
 				J_next += pow(w * (true_eps[i] - next_eps[i]), 2);
 			}

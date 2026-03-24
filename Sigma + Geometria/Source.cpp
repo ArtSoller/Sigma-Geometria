@@ -105,9 +105,15 @@ double xB = 0;
 double yB = 100.0;
 double zB = -VEL_LEN;
 
+vector<double> lambda_vec; // вектор параметров регуляризации (размер = количество параметров)
+vector<bool> zero_row_detected; // флаги для отслеживания нулевых строк
 
-vector<double_t> initial_params = { 150 /*y0*/,
-									 2250 /*y1*/ };
+
+
+vector<double_t> initial_params = { 50/*x0*/,
+									5000/*x1*/,
+									-1100 /*y0*/,
+									-200/*y1*/ };
 
 
 struct anomaly {
@@ -998,30 +1004,30 @@ double result_xyz_q(double x, double y, vector<double> q, vector<vector<double>>
 }
 
 void result_function_q(vector<double> q, vector<vector<double>> grid, vector<vector<int>> num_elem) {
-	cout << scientific << setprecision(8) << result_xyz_q(100, 0, q, grid, num_elem) << endl;
-	cout << scientific << setprecision(8) << result_xyz_q(150, 0, q, grid, num_elem) << endl;
-	cout << scientific << setprecision(8) << result_xyz_q(200, 0, q, grid, num_elem) << endl;
-	cout << scientific << setprecision(8) << result_xyz_q(250, 0, q, grid, num_elem) << endl;
-	cout << scientific << setprecision(8) << result_xyz_q(300, 0, q, grid, num_elem) << endl;
-	cout << scientific << setprecision(8) << result_xyz_q(50, 0, q, grid, num_elem) << endl;
-	cout << scientific << setprecision(8) << result_xyz_q(10, 0, q, grid, num_elem) << endl;
-	cout << scientific << setprecision(8) << result_xyz_q(350, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(600, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(800, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(1000, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(1200, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(1400, 0, q, grid, num_elem) << endl;
 	cout << scientific << setprecision(8) << result_xyz_q(400, 0, q, grid, num_elem) << endl;
-	cout << scientific << setprecision(8) << result_xyz_q(450, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(240, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(1600, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(1800, 0, q, grid, num_elem) << endl;
+	cout << scientific << setprecision(8) << result_xyz_q(2000, 0, q, grid, num_elem) << endl;
 	cout << endl;
 }
 
 void result_function_q(vector<double>& vec, vector<double> q, vector<vector<double>> grid, vector<vector<int>> num_elem) {
-	vec[0] = result_xyz_q(100, 0, q, grid, num_elem);
-	vec[1] = result_xyz_q(150, 0, q, grid, num_elem);
-	vec[2] = result_xyz_q(200, 0, q, grid, num_elem);
-	vec[3] = result_xyz_q(250, 0, q, grid, num_elem);
-	vec[4] = result_xyz_q(300, 0, q, grid, num_elem);
-	vec[5] = result_xyz_q(50, 0, q, grid, num_elem);
-	vec[6] = result_xyz_q(10, 0, q, grid, num_elem);
-	vec[7] = result_xyz_q(350, 0, q, grid, num_elem);
-	vec[8] = result_xyz_q(400, 0, q, grid, num_elem);
-	vec[9] = result_xyz_q(450, 0, q, grid, num_elem);
+	vec[0] = result_xyz_q(600, 0, q, grid, num_elem);
+	vec[1] = result_xyz_q(800, 0, q, grid, num_elem);
+	vec[2] = result_xyz_q(1000, 0, q, grid, num_elem);
+	vec[3] = result_xyz_q(1200, 0, q, grid, num_elem);
+	vec[4] = result_xyz_q(1400, 0, q, grid, num_elem);
+	vec[5] = result_xyz_q(400, 0, q, grid, num_elem);
+	vec[6] = result_xyz_q(240, 0, q, grid, num_elem);
+	vec[7] = result_xyz_q(1600, 0, q, grid, num_elem);
+	vec[8] = result_xyz_q(1800, 0, q, grid, num_elem);
+	vec[9] = result_xyz_q(2000, 0, q, grid, num_elem);
 }
 
 double derivative(double a, double b, double znam) {
@@ -1228,14 +1234,389 @@ void field_selection_direct_task()
 	}
 }
 
+//void inverse_problem() {
+//	cout << "\tGenerated synthetic data on receivers:" << endl;
+//
+//	// Увеличиваем количество точек измерений с 10 до 30
+//	vector<double> new_true_eps(45);
+//	double step = 2000.0 / 44.0; // 30 точек от 10 до 450
+//	for (int i = 0; i < 45; i++) {
+//		double x = 200.0 + i * step;
+//		new_true_eps[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
+//	}
+//
+//	// Заменяем старые измерения
+//	true_eps = new_true_eps;
+//
+//	// Выводим первые 10 для обратной совместимости
+//	for (int i = 0; i < 10; i++) {
+//		cout << true_eps[i] << endl;
+//	}
+//
+//	vector<double> prms(initial_params.begin(), initial_params.end());
+//	double lambda = 1e-6;
+//
+//	cout << "Initial parameters: " << prms[0] << ", " << prms[1] << endl;
+//	cout << "True anomaly: " << synthetic_anomaly.x0 << ", " << synthetic_anomaly.x1 << endl;
+//
+//	// Вычисляем функционал для начального приближения
+//	sloy_dop[0][0] = prms[0];
+//	sloy_dop[0][1] = prms[1];
+//	dop_mesh.r[1] = sloy_dop[0][0];
+//	dop_mesh.r[2] = sloy_dop[0][1];
+//
+//	field_selection_direct_task();
+//
+//	// Используем 30 точек для функционала
+//	vector<double> tmp_eps_30(45);
+//	for (int i = 0; i < 45; i++) {
+//		double x = 200.0 + i * step;
+//		tmp_eps_30[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
+//	}
+//
+//	double J_initial = 0.0;
+//	for (int i = 0; i < 45; i++) {
+//		J_initial += w * w * pow(true_eps[i] - tmp_eps_30[i], 2);
+//	}
+//	cout << "Initial J = " << J_initial << endl;
+//
+//	for (int iter = 0; iter < max_iter; iter++) {
+//		cout << "\n=== Iteration " << iter + 1 << " ===" << endl;
+//
+//		// 1. Текущие измерения (30 точек)
+//		sloy_dop[0][0] = prms[0];
+//		sloy_dop[0][1] = prms[1];
+//		dop_mesh.r[1] = sloy_dop[0][0];
+//		dop_mesh.r[2] = sloy_dop[0][1];
+//
+//		field_selection_direct_task();
+//
+//		// Получаем 30 точек
+//		vector<double> tmp_eps(45);
+//		for (int i = 0; i < 45; i++) {
+//			double x = 200.0 + i * step;
+//			tmp_eps[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
+//		}
+//
+//		// 2. Вычисляем матрицу Якоби (производные) для 30 точек
+//		size_t params_amount = initial_params.size();
+//		matrix J(45, vector<double>(params_amount, 0.0)); // 30x2
+//
+//		for (size_t p = 0; p < params_amount; p++) {
+//			double original_value = prms[p];
+//			double h = max(abs(original_value) * 0.01, 1.0);
+//
+//			// +
+//			prms[p] = original_value + h;
+//			sloy_dop[0][0] = prms[0];
+//			sloy_dop[0][1] = prms[1];
+//			dop_mesh.r[1] = sloy_dop[0][0];
+//			dop_mesh.r[2] = sloy_dop[0][1];
+//
+//			field_selection_direct_task();
+//			vector<double> eps_plus(45);
+//			for (int i = 0; i < 45; i++) {
+//				double x = 200.0 + i * step;
+//				eps_plus[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
+//			}
+//
+//			// -
+//			prms[p] = original_value - h;
+//			sloy_dop[0][0] = prms[0];
+//			sloy_dop[0][1] = prms[1];
+//			dop_mesh.r[1] = sloy_dop[0][0];
+//			dop_mesh.r[2] = sloy_dop[0][1];
+//
+//			field_selection_direct_task();
+//			vector<double> eps_minus(45);
+//			for (int i = 0; i < 45; i++) {
+//				double x = 200.0 + i * step;
+//				eps_minus[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
+//			}
+//
+//			// Восстанавливаем
+//			prms[p] = original_value;
+//			sloy_dop[0][0] = prms[0];
+//			sloy_dop[0][1] = prms[1];
+//			dop_mesh.r[1] = sloy_dop[0][0];
+//			dop_mesh.r[2] = sloy_dop[0][1];
+//
+//			for (int i = 0; i < 45; i++) {
+//				J[i][p] = (eps_plus[i] - eps_minus[i]) / (2 * h);
+//			}
+//		}
+//
+//		// 3. Формируем и решаем систему
+//		matrix A(params_amount, vector<double>(params_amount, 0.0));
+//		vector<double> b_vec(params_amount, 0.0);
+//
+//		// A = J^T * J + lambda*I
+//		for (size_t i = 0; i < params_amount; ++i) {
+//			for (size_t j = 0; j < params_amount; ++j) {
+//				double sum = 0.0;
+//				for (int k = 0; k < 45; ++k) { // 30 точек!
+//					sum += J[k][i] * J[k][j];
+//				}
+//				A[i][j] = sum;
+//			}
+//			A[i][i] += lambda;
+//		}
+//
+//		// b = J^T * (d - f(m)) - lambda*(m - m0)
+//		for (size_t i = 0; i < params_amount; ++i) {
+//			double sum = 0.0;
+//			for (int k = 0; k < 45; ++k) { // 30 точек!
+//				sum += J[k][i] * (true_eps[k] - tmp_eps[k]);
+//			}
+//			b_vec[i] = sum - lambda * (prms[i] - initial_params[i]);
+//		}
+//
+//		cout << "Current params: " << prms[0] << ", " << prms[1] << endl;
+//		cout << "Gradient norm: " << sqrt(b_vec[0] * b_vec[0] + b_vec[1] * b_vec[1]) << endl;
+//
+//		vector<double> delta = gauss(A, b_vec);
+//		cout << "Delta: " << delta[0] << ", " << delta[1] << endl;
+//
+//		// 4. Линейный поиск
+//		double best_alpha = 1.0;
+//		double best_J = 1e100;
+//		vector<double> best_prms = prms;
+//
+//		// Простой линейный поиск
+//		for (double alpha : {1.0, 0.5, 0.25, 0.125, 0.0625}) {
+//			vector<double> test_prms = prms;
+//			for (size_t i = 0; i < params_amount; i++) {
+//				test_prms[i] += alpha * delta[i];
+//				// ОГРАНИЧЕНИЯ НА ПАРАМЕТРЫ
+//				test_prms[i] = max(50.0, min(test_prms[i], 3000.0));
+//			}
+//
+//			sloy_dop[0][0] = test_prms[0];
+//			sloy_dop[0][1] = test_prms[1];
+//			dop_mesh.r[1] = sloy_dop[0][0];
+//			dop_mesh.r[2] = sloy_dop[0][1];
+//
+//			field_selection_direct_task();
+//			vector<double> test_eps(45);
+//			for (int i = 0; i < 45; i++) {
+//				double x = 200.0 + i * step;
+//				test_eps[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
+//			}
+//
+//			double J_test = 0.0;
+//			for (int i = 0; i < 45; i++) {
+//				J_test += pow(true_eps[i] - test_eps[i], 2);
+//			}
+//			for (size_t i = 0; i < params_amount; i++) {
+//				J_test += lambda * pow(test_prms[i] - initial_params[i], 2);
+//			}
+//
+//			cout << "  alpha=" << alpha << " J=" << J_test
+//				<< " params=(" << test_prms[0] << "," << test_prms[1] << ")" << endl;
+//
+//			if (J_test < best_J) {
+//				best_J = J_test;
+//				best_alpha = alpha;
+//				best_prms = test_prms;
+//			}
+//		}
+//
+//		// 5. Обновляем с ограничениями
+//		prms = best_prms;
+//		// ОГРАНИЧЕНИЯ НА ПАРАМЕТРЫ
+//		for (size_t i = 0; i < params_amount; i++) {
+//			prms[i] = max(50.0, min(prms[i], 3000.0));
+//		}
+//
+//		// 6. Вычисляем новый функционал (30 точек)
+//		sloy_dop[0][0] = prms[0];
+//		sloy_dop[0][1] = prms[1];
+//		dop_mesh.r[1] = sloy_dop[0][0];
+//		dop_mesh.r[2] = sloy_dop[0][1];
+//
+//		field_selection_direct_task();
+//		vector<double> new_tmp_eps(45);
+//		for (int i = 0; i < 45; i++) {
+//			double x = 200.0 + i * step;
+//			new_tmp_eps[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
+//		}
+//
+//		double J_new = 0.0;
+//		for (int i = 0; i < 30; i++) {
+//			J_new += pow(true_eps[i] - new_tmp_eps[i], 2);
+//		}
+//		for (size_t i = 0; i < params_amount; i++) {
+//			J_new += lambda * pow(prms[i] - initial_params[i], 2);
+//		}
+//
+//		cout << "Best alpha = " << best_alpha << endl;
+//		cout << "New J = " << J_new << endl;
+//		cout << "New params: " << prms[0] << ", " << prms[1] << endl;
+//
+//		// 7. Проверка сходимости
+//		if (J_new < 1e-10) {
+//			cout << "Converged!" << endl;
+//			break;
+//		}
+//
+//		if (iter > 0 && abs(delta[0]) < 1e-6 && abs(delta[1]) < 1e-6) {
+//			cout << "Delta too small" << endl;
+//			break;
+//		}
+//
+//		// Уменьшаем lambda каждые 3 итерации
+//		if (iter > 0 && iter % 3 == 0) {
+//			lambda *= 0.5;
+//			cout << "Lambda decreased to: " << lambda << endl;
+//		}
+//	}
+//
+//	cout << "\n=== Final Results ===" << endl;
+//	cout << "True anomaly: " << synthetic_anomaly.x0 << ", " << synthetic_anomaly.x1 << endl;
+//	cout << "Recovered: " << prms[0] << ", " << prms[1] << endl;
+//	cout << "Error: " << abs(prms[0] - synthetic_anomaly.x0) << ", "
+//		<< abs(prms[1] - synthetic_anomaly.x1) << endl;
+//}
+
+// Модифицированная функция gauss с адаптивной регуляризацией
+vector<double> gauss_adaptive(vector<vector<double>> A, vector<double> b,
+	vector<double>& lambda_vec, vector<bool>& row_flags) {
+	int n = A.size();
+	matrix AA = A;
+	vector<double> bb = b;
+
+	// Вектор для отслеживания, сколько раз каждая строка была нулевой
+	vector<int> zero_row_count(n, 0);
+
+	// Копируем исходную матрицу для возможного отката
+	matrix AA_original = A;
+	vector<double> bb_original = b;
+
+	// Флаг, указывающий, нужно ли перезапустить решение
+	bool restart = true;
+	int restart_count = 0;
+	const int MAX_RESTARTS = 100; // Защита от бесконечного цикла
+
+	while (restart && restart_count < MAX_RESTARTS) {
+		restart = false;
+		restart_count++;
+
+		// Сбрасываем рабочие матрицы до оригинальных
+		AA = AA_original;
+		bb = bb_original;
+
+		// Вектор для отслеживания, какие строки мы уже регуляризовали в этой попытке
+		vector<bool> regularized_in_this_attempt(n, false);
+
+		// Прямой ход с адаптивной регуляризацией
+		for (int i = 0; i < n; i++) {
+			// Поиск максимального элемента в столбце
+			int maxRow = i;
+			for (int k = i + 1; k < n; k++) {
+				if (abs(AA[k][i]) > abs(AA[maxRow][i])) {
+					maxRow = k;
+				}
+			}
+
+			swap(AA[i], AA[maxRow]);
+			swap(bb[i], bb[maxRow]);
+
+			// Проверка на нулевую строку
+			bool row_is_zero = true;
+			for (int j = i; j < n; j++) {
+				if (abs(AA[i][j]) > 1e-15) {
+					row_is_zero = false;
+					break;
+				}
+			}
+
+			// Проверка на нулевой главный элемент
+			if (abs(AA[i][i]) < 1e-15) {
+				row_is_zero = true;
+			}
+
+			if (row_is_zero) {
+				cout << "Zero row detected at index " << i << " (original parameter " << i << ")" << endl;
+
+				if (zero_row_count[i] == 0) {
+					// Первый раз обнаружили нулевую строку для этого индекса - добавляем 1e-6
+					lambda_vec[i] = 1e-6;
+					cout << "First time zero row for parameter " << i
+						<< ", setting lambda[" << i << "] = " << lambda_vec[i] << endl;
+
+					zero_row_count[i]++;
+					restart = true;
+					break; // Прерываем текущий проход и начинаем заново
+				}
+				else {
+					// Уже была нулевая строка для этого индекса - уменьшаем lambda вдвое
+					lambda_vec[i] *= 0.5;
+					cout << "Repeated zero row for parameter " << i
+						<< ", decreasing lambda[" << i << "] to " << lambda_vec[i] << endl;
+
+					zero_row_count[i]++;
+					restart = true;
+					break; // Прерываем текущий проход и начинаем заново
+				}
+			}
+
+			// Применяем регуляризацию только если для этой строки есть ненулевая lambda
+			// и мы еще не применяли её в этой попытке
+			if (lambda_vec[i] > 0 && !regularized_in_this_attempt[i]) {
+				AA[i][i] += lambda_vec[i];
+				cout << "Applied lambda[" << i << "] = " << lambda_vec[i] << " to row " << i << endl;
+				regularized_in_this_attempt[i] = true;
+			}
+
+			double pivot = AA[i][i];
+
+			// Нормализация строки i
+			for (int j = i; j < n; j++) {
+				AA[i][j] /= pivot;
+			}
+			bb[i] /= pivot;
+
+			// Исключение
+			for (int k = i + 1; k < n; k++) {
+				double factor = AA[k][i];
+				for (int j = i; j < n; j++) {
+					AA[k][j] -= factor * AA[i][j];
+				}
+				bb[k] -= factor * bb[i];
+			}
+		}
+
+		if (!restart) {
+			cout << "Successfully solved system after " << restart_count << " attempt(s)" << endl;
+			break;
+		}
+	}
+
+	if (restart_count >= MAX_RESTARTS) {
+		cout << "Warning: Maximum restarts reached. Using last available solution." << endl;
+	}
+
+	// Обратный ход
+	vector<double> x(n);
+	for (int i = n - 1; i >= 0; i--) {
+		x[i] = bb[i];
+		for (int j = i + 1; j < n; j++) {
+			x[i] -= AA[i][j] * x[j];
+		}
+	}
+
+	return x;
+}
+
+// Модифицированная функция обратной задачи
 void inverse_problem() {
 	cout << "\tGenerated synthetic data on receivers:" << endl;
 
-	// Увеличиваем количество точек измерений с 10 до 30
-	vector<double> new_true_eps(30);
-	double step = 450.0 / 29.0; // 30 точек от 10 до 450
-	for (int i = 0; i < 30; i++) {
-		double x = 10.0 + i * step;
+	// Увеличиваем количество точек измерений
+	vector<double> new_true_eps(45);
+	double step = 2000.0 / 44.0;
+	for (int i = 0; i < 45; i++) {
+		double x = 200.0 + i * step;
 		new_true_eps[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
 	}
 
@@ -1248,53 +1629,65 @@ void inverse_problem() {
 	}
 
 	vector<double> prms(initial_params.begin(), initial_params.end());
-	double lambda = 1e-6;
 
-	cout << "Initial parameters: " << prms[0] << ", " << prms[1] << endl;
-	cout << "True anomaly: " << synthetic_anomaly.x0 << ", " << synthetic_anomaly.x1 << endl;
+	// Инициализируем вектор lambda нулями (размер = количество параметров)
+	lambda_vec.resize(initial_params.size(), 0.0);
+	zero_row_detected.resize(initial_params.size(), false);
+
+	cout << "Initial parameters: " << prms[0] << ", " << prms[1] << ", " << prms[2] << ", " << prms[3] << endl;
+	cout << "True anomaly: " << synthetic_anomaly.x0 << ", " << synthetic_anomaly.x1 << ", " << synthetic_anomaly.y0 << ", " << synthetic_anomaly.y1 << endl;
+	cout << "Initial lambda vector: [" << lambda_vec[0] << ", " << lambda_vec[1] << ", " << lambda_vec[2] << ", " << lambda_vec[3] << "]" << endl;
 
 	// Вычисляем функционал для начального приближения
 	sloy_dop[0][0] = prms[0];
 	sloy_dop[0][1] = prms[1];
+	sloy_dop[0][2] = prms[2];
+	sloy_dop[0][3] = prms[3];
 	dop_mesh.r[1] = sloy_dop[0][0];
 	dop_mesh.r[2] = sloy_dop[0][1];
+	dop_mesh.z[1] = sloy_dop[0][2];
+	dop_mesh.z[2] = sloy_dop[0][3];
 
 	field_selection_direct_task();
 
-	// Используем 30 точек для функционала
-	vector<double> tmp_eps_30(30);
-	for (int i = 0; i < 30; i++) {
-		double x = 10.0 + i * step;
-		tmp_eps_30[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
+	// Используем 45 точек для функционала
+	vector<double> tmp_eps_45(45);
+	for (int i = 0; i < 45; i++) {
+		double x = 200.0 + i * step;
+		tmp_eps_45[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
 	}
 
 	double J_initial = 0.0;
-	for (int i = 0; i < 30; i++) {
-		J_initial += w * w * pow(true_eps[i] - tmp_eps_30[i], 2);
+	for (int i = 0; i < 45; i++) {
+		J_initial += w * w * pow(true_eps[i] - tmp_eps_45[i], 2);
 	}
 	cout << "Initial J = " << J_initial << endl;
 
 	for (int iter = 0; iter < max_iter; iter++) {
 		cout << "\n=== Iteration " << iter + 1 << " ===" << endl;
 
-		// 1. Текущие измерения (30 точек)
+		// 1. Текущие измерения (45 точек)
 		sloy_dop[0][0] = prms[0];
 		sloy_dop[0][1] = prms[1];
+		sloy_dop[0][2] = prms[2];
+		sloy_dop[0][3] = prms[3];
 		dop_mesh.r[1] = sloy_dop[0][0];
 		dop_mesh.r[2] = sloy_dop[0][1];
+		dop_mesh.z[1] = sloy_dop[0][2];
+		dop_mesh.z[2] = sloy_dop[0][3];
 
 		field_selection_direct_task();
 
-		// Получаем 30 точек
-		vector<double> tmp_eps(30);
-		for (int i = 0; i < 30; i++) {
-			double x = 10.0 + i * step;
+		// Получаем 45 точек
+		vector<double> tmp_eps(45);
+		for (int i = 0; i < 45; i++) {
+			double x = 200.0 + i * step;
 			tmp_eps[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
 		}
 
-		// 2. Вычисляем матрицу Якоби (производные) для 30 точек
+		// 2. Вычисляем матрицу Якоби (производные) для 45 точек
 		size_t params_amount = initial_params.size();
-		matrix J(30, vector<double>(params_amount, 0.0)); // 30x2
+		matrix J(45, vector<double>(params_amount, 0.0));
 
 		for (size_t p = 0; p < params_amount; p++) {
 			double original_value = prms[p];
@@ -1304,13 +1697,17 @@ void inverse_problem() {
 			prms[p] = original_value + h;
 			sloy_dop[0][0] = prms[0];
 			sloy_dop[0][1] = prms[1];
+			sloy_dop[0][2] = prms[2];
+			sloy_dop[0][3] = prms[3];
 			dop_mesh.r[1] = sloy_dop[0][0];
 			dop_mesh.r[2] = sloy_dop[0][1];
+			dop_mesh.z[1] = sloy_dop[0][2];
+			dop_mesh.z[2] = sloy_dop[0][3];
 
 			field_selection_direct_task();
-			vector<double> eps_plus(30);
-			for (int i = 0; i < 30; i++) {
-				double x = 10.0 + i * step;
+			vector<double> eps_plus(45);
+			for (int i = 0; i < 45; i++) {
+				double x = 200.0 + i * step;
 				eps_plus[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
 			}
 
@@ -1318,60 +1715,71 @@ void inverse_problem() {
 			prms[p] = original_value - h;
 			sloy_dop[0][0] = prms[0];
 			sloy_dop[0][1] = prms[1];
+			sloy_dop[0][2] = prms[2];
+			sloy_dop[0][3] = prms[3];
 			dop_mesh.r[1] = sloy_dop[0][0];
 			dop_mesh.r[2] = sloy_dop[0][1];
+			dop_mesh.z[1] = sloy_dop[0][2];
+			dop_mesh.z[2] = sloy_dop[0][3];
 
 			field_selection_direct_task();
-			vector<double> eps_minus(30);
-			for (int i = 0; i < 30; i++) {
-				double x = 10.0 + i * step;
+			vector<double> eps_minus(45);
+			for (int i = 0; i < 45; i++) {
+				double x = 200.0 + i * step;
 				eps_minus[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
 			}
 
 			// Восстанавливаем
 			prms[p] = original_value;
-			sloy_dop[0][0] = prms[0];
-			sloy_dop[0][1] = prms[1];
-			dop_mesh.r[1] = sloy_dop[0][0];
-			dop_mesh.r[2] = sloy_dop[0][1];
+			sloy_dop[0][2] = prms[0];
+			sloy_dop[0][3] = prms[1];
+			dop_mesh.z[1] = sloy_dop[0][2];
+			dop_mesh.z[2] = sloy_dop[0][3];
 
-			for (int i = 0; i < 30; i++) {
+			for (int i = 0; i < 45; i++) {
 				J[i][p] = (eps_plus[i] - eps_minus[i]) / (2 * h);
 			}
 		}
 
-		// 3. Формируем и решаем систему
+		// 3. Формируем систему A * delta = b С ВЕКТОРОМ lambda
 		matrix A(params_amount, vector<double>(params_amount, 0.0));
 		vector<double> b_vec(params_amount, 0.0);
 
-		// A = J^T * J + lambda*I
+		// A = J^T * J
 		for (size_t i = 0; i < params_amount; ++i) {
 			for (size_t j = 0; j < params_amount; ++j) {
 				double sum = 0.0;
-				for (int k = 0; k < 30; ++k) { // 30 точек!
+				for (int k = 0; k < 45; ++k) {
 					sum += J[k][i] * J[k][j];
 				}
 				A[i][j] = sum;
 			}
-			A[i][i] += lambda;
+			// Добавляем регуляризацию Тихонова с ИНДИВИДУАЛЬНЫМ lambda для каждого параметра
+			A[i][i] += lambda_vec[i];  // Используем lambda_vec[i] вместо константы
 		}
 
-		// b = J^T * (d - f(m)) - lambda*(m - m0)
+		// b = J^T * (d - f(m)) - lambda * (m - m0) с ИНДИВИДУАЛЬНЫМИ lambda
 		for (size_t i = 0; i < params_amount; ++i) {
 			double sum = 0.0;
-			for (int k = 0; k < 30; ++k) { // 30 точек!
+			for (int k = 0; k < 45; ++k) {
 				sum += J[k][i] * (true_eps[k] - tmp_eps[k]);
 			}
-			b_vec[i] = sum - lambda * (prms[i] - initial_params[i]);
+			// Используем lambda_vec[i] для каждого параметра отдельно
+			//b_vec[i] = sum - lambda_vec[i] * (prms[i] - initial_params[i]);
+			b_vec[i] = sum;
 		}
 
-		cout << "Current params: " << prms[0] << ", " << prms[1] << endl;
-		cout << "Gradient norm: " << sqrt(b_vec[0] * b_vec[0] + b_vec[1] * b_vec[1]) << endl;
+		cout << "Current params: " << prms[0] << ", " << prms[1] << ", " << prms[2] << ", " << prms[3] << endl;
+		cout << "Gradient norm: " << sqrt(b_vec[0] * b_vec[0] + b_vec[1] * b_vec[1] + b_vec[2] * b_vec[2] + b_vec[3] * b_vec[3]) << endl;
+		cout << "Current lambda vector before solving: [" << lambda_vec[0] << ", " << lambda_vec[1] << ", " << lambda_vec[2] << ", " << lambda_vec[3] << "]" << endl;
 
-		vector<double> delta = gauss(A, b_vec);
-		cout << "Delta: " << delta[0] << ", " << delta[1] << endl;
+		// 4. Решаем систему с адаптивной регуляризацией для каждой строки
+		vector<double> delta = gauss_adaptive(A, b_vec, lambda_vec, zero_row_detected);
 
-		// 4. Линейный поиск
+		cout << "Delta: " << delta[0] << ", " << delta[1] << ", " << delta[2] << ", " << delta[3] << endl;
+		cout << "Lambda vector after solving: [" << lambda_vec[0] << ", " << lambda_vec[1] << lambda_vec[2] << ", " << lambda_vec[3] << "]" << endl;
+
+		// 5. Линейный поиск
 		double best_alpha = 1.0;
 		double best_J = 1e100;
 		vector<double> best_prms = prms;
@@ -1382,31 +1790,38 @@ void inverse_problem() {
 			for (size_t i = 0; i < params_amount; i++) {
 				test_prms[i] += alpha * delta[i];
 				// ОГРАНИЧЕНИЯ НА ПАРАМЕТРЫ
-				test_prms[i] = max(50.0, min(test_prms[i], 3000.0));
+				if (test_prms[i] < 0)
+					test_prms[i] = max(-2000.0, min(test_prms[i], -200.0));
+				else
+					test_prms[i] = max(150.0, min(test_prms[i], 3000.0));
 			}
-
 			sloy_dop[0][0] = test_prms[0];
 			sloy_dop[0][1] = test_prms[1];
+			sloy_dop[0][2] = test_prms[2];
+			sloy_dop[0][3] = test_prms[3];
 			dop_mesh.r[1] = sloy_dop[0][0];
 			dop_mesh.r[2] = sloy_dop[0][1];
+			dop_mesh.z[1] = sloy_dop[0][2];
+			dop_mesh.z[2] = sloy_dop[0][3];
 
 			field_selection_direct_task();
-			vector<double> test_eps(30);
-			for (int i = 0; i < 30; i++) {
-				double x = 10.0 + i * step;
+			vector<double> test_eps(45);
+			for (int i = 0; i < 45; i++) {
+				double x = 200.0 + i * step;
 				test_eps[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
 			}
 
 			double J_test = 0.0;
-			for (int i = 0; i < 30; i++) {
+			for (int i = 0; i < 45; i++) {
 				J_test += pow(true_eps[i] - test_eps[i], 2);
 			}
+			// Добавляем регуляризационный член с ИНДИВИДУАЛЬНЫМИ lambda
 			for (size_t i = 0; i < params_amount; i++) {
-				J_test += lambda * pow(test_prms[i] - initial_params[i], 2);
+				J_test += lambda_vec[i] * pow(test_prms[i] - initial_params[i], 2);
 			}
 
 			cout << "  alpha=" << alpha << " J=" << J_test
-				<< " params=(" << test_prms[0] << "," << test_prms[1] << ")" << endl;
+				<< " params=(" << test_prms[0] << "," << test_prms[1] << "," << test_prms[2] << "," << test_prms[3] << ")" << endl;
 
 			if (J_test < best_J) {
 				best_J = J_test;
@@ -1415,61 +1830,65 @@ void inverse_problem() {
 			}
 		}
 
-		// 5. Обновляем с ограничениями
+		// 6. Обновляем с ограничениями
 		prms = best_prms;
-		// ОГРАНИЧЕНИЯ НА ПАРАМЕТРЫ
 		for (size_t i = 0; i < params_amount; i++) {
-			prms[i] = max(50.0, min(prms[i], 3000.0));
+			if (prms[i] < 0)
+				prms[i] = max(-2000.0, min(prms[i], -200.0));
+			else
+				prms[i] = max(150.0, min(prms[i], 3000.0));
 		}
 
-		// 6. Вычисляем новый функционал (30 точек)
+		// 7. Вычисляем новый функционал (45 точек)
 		sloy_dop[0][0] = prms[0];
 		sloy_dop[0][1] = prms[1];
+		sloy_dop[0][2] = prms[2];
+		sloy_dop[0][3] = prms[3];
 		dop_mesh.r[1] = sloy_dop[0][0];
 		dop_mesh.r[2] = sloy_dop[0][1];
+		dop_mesh.z[1] = sloy_dop[0][2];
+		dop_mesh.z[2] = sloy_dop[0][3];
 
 		field_selection_direct_task();
-		vector<double> new_tmp_eps(30);
-		for (int i = 0; i < 30; i++) {
-			double x = 10.0 + i * step;
+		vector<double> new_tmp_eps(45);
+		for (int i = 0; i < 45; i++) {
+			double x = 200.0 + i * step;
 			new_tmp_eps[i] = result_xyz_q(x, 0, qv, grid_n, num_elem_n);
 		}
 
 		double J_new = 0.0;
-		for (int i = 0; i < 30; i++) {
+		for (int i = 0; i < 45; i++) {
 			J_new += pow(true_eps[i] - new_tmp_eps[i], 2);
 		}
+		// Добавляем регуляризационный член с ИНДИВИДУАЛЬНЫМИ lambda
 		for (size_t i = 0; i < params_amount; i++) {
-			J_new += lambda * pow(prms[i] - initial_params[i], 2);
+			J_new += lambda_vec[i] * pow(prms[i] - initial_params[i], 2);
 		}
 
 		cout << "Best alpha = " << best_alpha << endl;
 		cout << "New J = " << J_new << endl;
-		cout << "New params: " << prms[0] << ", " << prms[1] << endl;
+		cout << "New params: " << prms[0] << ", " << prms[1] << ", " << prms[2] << ", " << prms[3] << endl;
+		cout << "Current lambda vector: [" << lambda_vec[0] << ", " << lambda_vec[1] << lambda_vec[2] << ", " << lambda_vec[3] << "]" << endl;
 
-		// 7. Проверка сходимости
+		// 8. Проверка сходимости
 		if (J_new < 1e-10) {
 			cout << "Converged!" << endl;
 			break;
 		}
 
-		if (iter > 0 && abs(delta[0]) < 1e-6 && abs(delta[1]) < 1e-6) {
+		if (iter > 0 && abs(delta[0]) < 1e-6 && abs(delta[1]) < 1e-6 && abs(delta[2]) < 1e-6 && abs(delta[3]) < 1e-6) {
 			cout << "Delta too small" << endl;
 			break;
-		}
-
-		// Уменьшаем lambda каждые 3 итерации
-		if (iter > 0 && iter % 3 == 0) {
-			lambda *= 0.5;
-			cout << "Lambda decreased to: " << lambda << endl;
 		}
 	}
 
 	cout << "\n=== Final Results ===" << endl;
-	cout << "True anomaly: " << synthetic_anomaly.x0 << ", " << synthetic_anomaly.x1 << endl;
-	cout << "Recovered: " << prms[0] << ", " << prms[1] << endl;
+	cout << "True anomaly: " << synthetic_anomaly.x0 << ", " << synthetic_anomaly.x1 << ", " << synthetic_anomaly.y0 << ", " << synthetic_anomaly.y1 << endl;
+	cout << "Recovered: " << prms[0] << ", " << prms[1] << ", " << prms[2] << ", " << prms[3] << endl;
 	cout << "Error: " << abs(prms[0] - synthetic_anomaly.x0) << ", "
-		<< abs(prms[1] - synthetic_anomaly.x1) << endl;
+		<< abs(prms[1] - synthetic_anomaly.x1) << abs(prms[2] - synthetic_anomaly.y0) << ", "
+		<< abs(prms[3] - synthetic_anomaly.y1) << endl;
+	cout << "Final lambda vector: [" << lambda_vec[0] << ", " << lambda_vec[1] << ", " << lambda_vec[2] << ", " << lambda_vec[3] << "]" << endl;
 }
 
 int main()

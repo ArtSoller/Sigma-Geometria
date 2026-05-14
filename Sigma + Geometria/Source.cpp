@@ -110,10 +110,10 @@ vector<bool> zero_row_detected; // флаги для отслеживания н
 
 
 
-vector<double_t> initial_params = { 50/*x0*/,
-									5000/*x1*/,
-									-1100 /*y0*/,
-									-200/*y1*/ };
+vector<double_t> initial_params = { 350/*x0*/,
+									1750/*x1*/,
+									-850 /*y0*/,
+									-300/*y1*/ };
 
 
 struct anomaly {
